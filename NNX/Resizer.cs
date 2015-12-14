@@ -130,7 +130,7 @@ namespace NeuralNetworksExcel
                         // TODO: Handle unexpected error
                         return;
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         // TODO: Handle unexpected error
                         return;

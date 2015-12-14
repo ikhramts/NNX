@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Xml;
 using Xunit;
 
 namespace NeuralNetworks.Tests
@@ -300,6 +298,16 @@ namespace NeuralNetworks.Tests
             Assert.Equal(expected.Weights[1], config.Weights[1]);
         }
 
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        public void SetInputs_IfArgLengthNotEqualToInputLength_Throw(int argLength)
+        {
+            var arg = new double[argLength];
+            var nn = new TwoLayerPerceptron(2, 2, 2);
+            Assert.Throws<NeuralNetworkException>(() => nn.SetInputs(arg));
+        }
+            
         public static NeuralNetworkConfig GetSampleConfig()
         {
             return TestObjects.NeuralNetworkConfigObjects.GetTwoLayerPerceptronConfig();

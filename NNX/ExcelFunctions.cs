@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using ExcelDna.Integration;
 using NeuralNetworks;
+using NeuralNetworks.Training;
 using NNX.NeuralNetwork;
 
 namespace NNX
@@ -8,11 +10,23 @@ namespace NNX
     public static class ExcelFunctions
     {
         //===================== Excel functions =============================
-        [ExcelFunction(Name = "nnMakeTrainer")]
-        public static string MakeTrainer(string name, int numEpochs, double learningRate, double quadraticRegularization,
-            double momentum)
+        [ExcelFunction(Name = "nnMakeTrainerConfig")]
+        public static string MakeTrainerConfig(string name, int numEpochs, double learningRate,
+            double momentum, double quadraticRegularization, int seed)
         {
-            throw new NotImplementedException();
+            var config = new TrainerConfig
+            {
+                NumEpochs = numEpochs,
+                LearningRate = learningRate,
+                Momentum = momentum,
+                QuadraticRegularization = quadraticRegularization,
+                Seed = seed,
+            };
+
+            config.Validate();
+
+            ObjectStore.Add(name, config);
+            return name;
         }
 
         [ExcelFunction(Name = "nnMakeTwoLayerPerceptronConfig")]
@@ -33,7 +47,8 @@ namespace NNX
         }
 
         [ExcelFunction(Name = "nnMakeTwoLayerPerceptron")]
-        public static string MakeTwoLayerPerceptron(string name, int numHiddenNodes, double[] hiddenWeights, double[] outputWeights)
+        public static string MakeTwoLayerPerceptron(string name, int numHiddenNodes, 
+            double[] hiddenWeights, double[] outputWeights)
         {
             var numInputs = (hiddenWeights.Length / numHiddenNodes) - 1;
             var numOutputs = outputWeights.Length / (numHiddenNodes + 1);
@@ -55,10 +70,63 @@ namespace NNX
             return name;
         }
 
-        [ExcelFunction(Name = "nnTrain")]
-        public static string Train(string neuralNetworkName, string trainerName, double[,] inputs, double[] targets)
+        [ExcelFunction(Name = "nnTrainTwoLayerPerceptron")]
+        public static string TrainTwoLayerPerceptron(string neuralNetworkName, string trainerConfigName, 
+            double[,] inputs, double[,] targets, int numHiddenNodes)
         {
-            throw new NotImplementedException();
+            // Check inputs.
+            if (numHiddenNodes <= 0)
+                throw new NNXException($"Parameter NumHiddenNodes should be positive; was {numHiddenNodes}.");
+
+            var numInputPoints = inputs.GetLength(0);
+            var numTargetPoints = targets.GetLength(0);
+
+            if (numInputPoints != numTargetPoints)
+                throw new NNXException(
+                    $"Height of Inputs matrix (was {numInputPoints}) should be equal to height "+
+                    $"of Targets matrix (was {numTargetPoints}).");
+
+            // Prepare input+target set.
+            var numPoints = numTargetPoints;
+
+            var inputTargets = new List<InputOutput>(numPoints);
+
+            for (var i = 0; i < numPoints; i++)
+            {
+                var inputTarget = new InputOutput
+                {
+                    Input = inputs.ExtractRow(i),
+                    Output = targets.ExtractRow(i)
+                };
+
+                inputTargets.Add(inputTarget);
+            }
+
+            // Prepare configs.
+            var inputWidth = inputs.GetLength(1);
+            var targedWidth = targets.GetLength(1);
+
+            var nnConfig = new NeuralNetworkConfig
+            {
+                NetworkType = "TwoLayerPerceptron",
+                Settings = new Dictionary<string, string>
+                {
+                    {"NumInputs", inputWidth.ToString() },
+                    {"NumHidden", numHiddenNodes.ToString() },
+                    {"NumOutputs", targedWidth.ToString() },
+                }
+            };
+
+            var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
+            trainerConfig.NeuralNetworkConfig = nnConfig;
+
+            // Let's go!
+            var trainer = TrainerProvider.GetTrainer();
+            trainer.Config = trainerConfig;
+            var nn = trainer.Train(inputTargets);
+            
+            ObjectStore.Add(neuralNetworkName, nn);
+            return neuralNetworkName;
         }
 
         [ExcelFunction(Name = "nnGetTrainingStats")]
@@ -78,9 +146,9 @@ namespace NNX
             double[,] result;
 
             if (layer == 1)
-                result = perceptron.HiddenWeights.To2DArray();
+                result = perceptron.HiddenWeights.ToVertical2DArray();
             else
-                result = perceptron.OutputWeights.To2DArray();
+                result = perceptron.OutputWeights.ToVertical2DArray();
 
             ResizeOutputToArray(result);
             return result;
@@ -94,9 +162,15 @@ namespace NNX
         }
 
         [ExcelFunction(Name = "nnFeedForward")]
-        public static double[] FeedForward(string neuralNetworkName, double[] inputs)
+        public static double[,] FeedForward(string neuralNetworkName, double[] inputs)
         {
-            throw new NotImplementedException();
+            var nn = ObjectStore.Get<INeuralNetwork>(neuralNetworkName);
+            nn.SetInputs(inputs);
+            nn.FeedForward();
+            var result = nn.Outputs.ToHorizontal2DArray();
+
+            ResizeOutputToArray(result);
+            return result;
         }
 
         //===================== Private helpers =============================

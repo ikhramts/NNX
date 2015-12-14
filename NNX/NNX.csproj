@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddIn.cs" />
+    <Compile Include="MatrixExtensions.cs" />
     <Compile Include="ExcelFunctions.cs" />
     <Compile Include="ListExtensions.cs" />
     <Compile Include="NeuralNetwork\TwoLayerPerceptronConfig.cs" />

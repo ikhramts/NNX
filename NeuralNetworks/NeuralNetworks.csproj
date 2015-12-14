@@ -39,6 +39,10 @@
     <Reference Include="CsvHelper">
       <HintPath>..\packages\CsvHelper.2.11.1.1\lib\net40-client\CsvHelper.dll</HintPath>
     </Reference>
+    <Reference Include="Moq, Version=4.2.1510.2205, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <HintPath>..\packages\Moq.4.2.1510.2205\lib\net40\Moq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Newtonsoft.Json.7.0.1-beta1\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -52,7 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataFlow\CsvContext.cs" />
     <Compile Include="DataFlow\IInputSet.cs" />
     <Compile Include="DataFlow\InputOutputSet.cs" />
     <Compile Include="DataFlow\InputOutputTargetSet.cs" />
@@ -63,10 +66,15 @@
     <Compile Include="INeuralNetwork.cs" />
     <Compile Include="ListExtensions.cs" />
     <Compile Include="InputOutput.cs" />
+    <Compile Include="Utils\IRandomGenerator.cs" />
+    <Compile Include="Utils\RandomGenerator.cs" />
+    <Compile Include="Utils\RandomProvider.cs" />
     <Compile Include="NeuralNetworkBuilder.cs" />
     <Compile Include="NeuralNetworkConfig.cs" />
+    <Compile Include="Training\ITrainer.cs" />
     <Compile Include="Training\Trainer.cs" />
     <Compile Include="Training\TrainerConfig.cs" />
+    <Compile Include="Training\TrainerProvider.cs" />
     <Compile Include="Training\TrainingResult.cs" />
     <Compile Include="Training\TrainingRun.cs" />
     <Compile Include="TwoLayerPerceptron.cs" />

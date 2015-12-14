@@ -1,5 +1,4 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
 using NNX.NeuralNetwork;
 using Xunit;
 
@@ -23,7 +22,6 @@ namespace NNX.Tests.ExcelFuncionsTests
             result.NumHiddenNodes.ShouldBeEquivalentTo(5);
         }
 
-        [Theory]
         [InlineData(0)]
         [InlineData(-3)]
         public void IfNumHiddenNodesNotPositive_Throw(int numHiddenNodes)

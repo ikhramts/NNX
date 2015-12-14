@@ -109,6 +109,10 @@ namespace NeuralNetworks
 
         public void SetInputs(double[] inputs)
         {
+            if (inputs.Length != NumInputs)
+                throw new NeuralNetworkException($"Input array length ({inputs.Length}) does not match "+
+                                                    $"neural network input length ({NumInputs})");
+
             Array.Copy(inputs, Inputs, NumInputs);
         }
 

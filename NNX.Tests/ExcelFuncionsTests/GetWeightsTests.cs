@@ -17,14 +17,15 @@ namespace NNX.Tests.ExcelFuncionsTests
             Assert.Equal(expected, result);
         }
 
+        // ReSharper disable once UnusedMember.Local
         private static IEnumerable<object[]> ShouldGetWeightsForLayer_Inputs()
         {
             var samplePerceptron = new SampleTwoLayerPerceptron();
 
             return new[]
             {
-                new object[] {samplePerceptron, 1, samplePerceptron.HiddenWeights.To2DArray()},
-                new object[] {samplePerceptron, 2, samplePerceptron.OutputWeights.To2DArray()},
+                new object[] {samplePerceptron, 1, samplePerceptron.HiddenWeights.ToVertical2DArray()},
+                new object[] {samplePerceptron, 2, samplePerceptron.OutputWeights.ToVertical2DArray()},
             };
         }
 

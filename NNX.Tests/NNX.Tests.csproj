@@ -38,6 +38,10 @@
       <HintPath>..\packages\FluentAssertions.4.1.0\lib\net45\FluentAssertions.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Moq, Version=4.2.1510.2205, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
+      <HintPath>..\packages\Moq.4.2.1510.2205\lib\net40\Moq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -65,10 +69,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExcelFuncionsTests\ClearAllObjectsTests.cs" />
+    <Compile Include="ExcelFuncionsTests\FeedForwardTests.cs" />
     <Compile Include="ExcelFuncionsTests\GetWeightsTests.cs" />
+    <Compile Include="ExcelFuncionsTests\MakeTrainerConfigTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronConfigTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\SampleData.cs" />
+    <Compile Include="ExcelFuncionsTests\TrainTwoLayerPerceptronTests.cs" />
     <Compile Include="ObjectStoreTestBase.cs" />
     <Compile Include="ObjectStoreTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

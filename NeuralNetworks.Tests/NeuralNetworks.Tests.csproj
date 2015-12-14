@@ -65,9 +65,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataFlow\CsvDataLoaderTests.cs" />
-    <Compile Include="DataFlow\InputOutputSetTests.cs" />
-    <Compile Include="DataFlow\InputOutputTargetSetTests.cs" />
     <Compile Include="ErrorCalculationsTests.cs" />
     <Compile Include="DataFlow\InputSetTests.cs" />
     <Compile Include="ListExtensionTests.cs" />

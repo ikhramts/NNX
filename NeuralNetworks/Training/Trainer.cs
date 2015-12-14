@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using NeuralNetworks.Utils;
 
 namespace NeuralNetworks.Training
 {
-    public class Trainer
+    public class Trainer : ITrainer
     {
         public TrainerConfig Config { get; set; }
 
@@ -14,7 +15,7 @@ namespace NeuralNetworks.Training
             Config = config;
         }
 
-        public INeuralNetwork Train(IList<InputOutput> trainingSet, Random customRand = null)
+        public INeuralNetwork Train(IList<InputOutput> trainingSet)
         {
             if (Config == null)
                 throw new NeuralNetworkException("Trainer is missing Config property.");
@@ -27,8 +28,12 @@ namespace NeuralNetworks.Training
             if (Config.NeuralNetworkConfig == null)
                 throw new NeuralNetworkException("Config property is missing NeuralNetworkConfig.");
 
-            var rand = customRand ?? new Random();
+            var rand = RandomProvider.GetRandom(Config.Seed);
             var nn = NeuralNetworkBuilder.Build(Config.NeuralNetworkConfig);
+
+            if (Config.NeuralNetworkConfig.Weights == null)
+                InitializeWeights(nn, rand);
+
             var prevWeightGradients = nn.Weights.DeepClone();
 
             foreach (var gradSet in prevWeightGradients)
@@ -111,5 +116,17 @@ namespace NeuralNetworks.Training
                 }
             }
         }
+
+        public static void InitializeWeights(INeuralNetwork nn, IRandomGenerator rand)
+        {
+            var weights = nn.Weights;
+
+            foreach (var weightsSubList in weights)
+            {
+                for (int i = 0; i < weightsSubList.Length; i++)
+                    weightsSubList[i] = rand.NextDouble() * 0.2 - 0.1;
+            }
+        }
+
     }
 }
