@@ -24,27 +24,29 @@ namespace NeuralNetworks.Tests.Training
         [Fact]
         public void ConstructorFromConfig_SetConfig()
         {
-            var config = GetSampleTrainerConfig();
-            var trainer = new Trainer(config);
-            Assert.Same(config, trainer.Config);
+            var trainerConfig = GetSampleTrainerConfig();
+            var trainer = new Trainer(trainerConfig);
+            Assert.Same(trainerConfig, trainer.Config);
         }
 
         [Fact]
         public void Train_IfMissingTrainerConfig_Throw()
         {
             var trainingSet = GetTrainingSet();
+            var nnConfig = GetSampleNNConfig();
             var trainer = new Trainer();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet));
+            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nnConfig));
         }
 
         [Fact]
         public void Train_IfTrainingSetDoesNotMatchNetwork_Throw()
         {
-            var config = GetSampleTrainerConfig();
-            config.NeuralNetworkConfig.Settings["NumInputs"] = "3";
-            var trainer = new Trainer(config);
+            var trainerConfig = GetSampleTrainerConfig();
+            var nnConfig = GetSampleNNConfig();
+            nnConfig.Settings["NumInputs"] = "3";
+            var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet));
+            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nnConfig));
         }
 
         [Theory]
@@ -52,21 +54,23 @@ namespace NeuralNetworks.Tests.Training
         [InlineData(0)]
         public void Train_IfNumEpochsNotPositive_Throw(int numEpochs)
         {
-            var config = GetSampleTrainerConfig();
-            config.NumEpochs = numEpochs;
-            var trainer = new Trainer(config);
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.NumEpochs = numEpochs;
+            var nnConfig = GetSampleNNConfig();
+            var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet));
+            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nnConfig));
         }
 
         [Fact]
         public void Train_IfMissingNeuralNetworkConfig_Throw()
         {
-            var config = GetSampleTrainerConfig();
-            config.NeuralNetworkConfig = null;
-            var trainer = new Trainer(config);
+            var trainerConfig = GetSampleTrainerConfig();
+            var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet));
+
+            Action action = () => trainer.Train(trainingSet, null);
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         [Fact]
@@ -79,12 +83,13 @@ namespace NeuralNetworks.Tests.Training
 
             NeuralNetworkBuilder.Builder = builderMock.Object;
 
-            var config = GetSampleTrainerConfig();
-            var trainer = new Trainer(config);
+            var trainerConfig = GetSampleTrainerConfig();
+            var nnConfig = GetSampleNNConfig();
+            var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
 
-            trainer.Train(trainingSet);
-            builderMock.Verify(b => b.CustomBuild(config.NeuralNetworkConfig), Times.Exactly(1));
+            trainer.Train(trainingSet, nnConfig);
+            builderMock.Verify(b => b.CustomBuild(nnConfig), Times.Exactly(1));
         }
 
 
@@ -99,11 +104,12 @@ namespace NeuralNetworks.Tests.Training
 
             NeuralNetworkBuilder.Builder = builderMock.Object;
 
-            var config = GetSampleTrainerConfig();
-            var trainer = new Trainer(config);
+            var trainerConfig = GetSampleTrainerConfig();
+            var nnConfig = GetSampleNNConfig();
+            var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
 
-            var nn = trainer.Train(trainingSet);
+            var nn = trainer.Train(trainingSet, nnConfig);
 
             nn.Should().NotBeNull();
             var weights = nn.Weights;
@@ -132,12 +138,13 @@ namespace NeuralNetworks.Tests.Training
 
             NeuralNetworkBuilder.Builder = builderMock.Object;
 
-            var config = GetSampleTrainerConfig();
-            config.NumEpochs = 2;
-            var trainer = new Trainer(config);
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.NumEpochs = 2;
+            var nnConfig = GetSampleNNConfig();
+            var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
 
-            var nn = trainer.Train(trainingSet);
+            var nn = trainer.Train(trainingSet, nnConfig);
 
             nn.Should().NotBeNull();
             var weights = nn.Weights;
@@ -170,18 +177,22 @@ namespace NeuralNetworks.Tests.Training
                 LearningRate = 0.5,
                 Momentum = 2,
                 NumEpochs = 1,
-                QuadraticRegularization = 0.1,
-                NeuralNetworkConfig = new NeuralNetworkConfig
+                QuadraticRegularization = 0.1
+            };
+        }
+
+        public NeuralNetworkConfig GetSampleNNConfig()
+        {
+            return new NeuralNetworkConfig
+            {
+                NetworkType = "TwoLayerPerceptron",
+                Settings = new Dictionary<string, string>
                 {
-                    NetworkType = "TwoLayerPerceptron",
-                    Settings = new Dictionary<string, string>
-                    {
-                        {"NumInputs", "2"},
-                        {"NumHidden", "1"},
-                        {"NumOutputs", "1"},
-                    },
-                    Weights = new[] { new[] { 1.0, 2.0, 3.0 }, new[] { 1.5, 0.5 } }
-                }
+                    {"NumInputs", "2"},
+                    {"NumHidden", "1"},
+                    {"NumOutputs", "1"},
+                },
+                Weights = new[] {new[] {1.0, 2.0, 3.0}, new[] {1.5, 0.5}}
             };
         }
 

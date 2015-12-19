@@ -114,12 +114,11 @@ namespace NNX
             };
 
             var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
-            trainerConfig.NeuralNetworkConfig = nnConfig;
 
             // Let's go!
             var trainer = TrainerProvider.GetTrainer();
             trainer.Config = trainerConfig;
-            var nn = trainer.Train(inputTargets);
+            var nn = trainer.Train(inputTargets, nnConfig);
             
             ObjectStore.Add(neuralNetworkName, nn);
             return neuralNetworkName;

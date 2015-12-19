@@ -6,7 +6,6 @@ namespace NeuralNetworks.Training
 {
     public class TrainerConfig : ICloneable
     {
-        public NeuralNetworkConfig NeuralNetworkConfig { get; set; }
         public double LearningRate { get; set; }
         public double Momentum { get; set; }
         public double QuadraticRegularization { get; set; }

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using ExcelDna.Integration;
 
-namespace NeuralNetworksExcel
+namespace NNX
 {
     public class Resizer
     {
@@ -15,12 +15,12 @@ namespace NeuralNetworksExcel
         // Needs extra protection to allow multithreaded use.
         public static object Resize(object[,] array)
         {
-            ExcelReference caller = XlCall.Excel(XlCall.xlfCaller) as ExcelReference;
+            var caller = XlCall.Excel(XlCall.xlfCaller) as ExcelReference;
             if (caller == null)
                 return array;
 
-            int rows = array.GetLength(0);
-            int columns = array.GetLength(1);
+            var rows = array.GetLength(0);
+            var columns = array.GetLength(1);
 
             if ((caller.RowLast - caller.RowFirst + 1 != rows) ||
                 (caller.ColumnLast - caller.ColumnFirst + 1 != columns))
@@ -38,7 +38,7 @@ namespace NeuralNetworksExcel
 
         static void EnqueueResize(ExcelReference caller, int rows, int columns)
         {
-            ExcelReference target = new ExcelReference(caller.RowFirst, caller.RowFirst + rows - 1, caller.ColumnFirst, caller.ColumnFirst + columns - 1, caller.SheetId);
+            var target = new ExcelReference(caller.RowFirst, caller.RowFirst + rows - 1, caller.ColumnFirst, caller.ColumnFirst + columns - 1, caller.SheetId);
             ResizeJobs.Enqueue(target);
         }
 
@@ -59,32 +59,32 @@ namespace NeuralNetworksExcel
                 XlCall.Excel(XlCall.xlcEcho, false);
 
                 // Get the formula in the first cell of the target
-                string formula = (string)XlCall.Excel(XlCall.xlfGetCell, 41, target);
-                ExcelReference firstCell = new ExcelReference(target.RowFirst, target.RowFirst, target.ColumnFirst, target.ColumnFirst, target.SheetId);
+                var formula = (string)XlCall.Excel(XlCall.xlfGetCell, 41, target);
+                var firstCell = new ExcelReference(target.RowFirst, target.RowFirst, target.ColumnFirst, target.ColumnFirst, target.SheetId);
 
-                bool isFormulaArray = (bool)XlCall.Excel(XlCall.xlfGetCell, 49, target);
+                var isFormulaArray = (bool)XlCall.Excel(XlCall.xlfGetCell, 49, target);
                 if (isFormulaArray)
                 {
-                    object oldSelectionOnActiveSheet = XlCall.Excel(XlCall.xlfSelection);
-                    object oldActiveCell = XlCall.Excel(XlCall.xlfActiveCell);
+                    var oldSelectionOnActiveSheet = XlCall.Excel(XlCall.xlfSelection);
+                    XlCall.Excel(XlCall.xlfActiveCell);
 
                     // Remember old selection and select the first cell of the target
-                    string firstCellSheet = (string)XlCall.Excel(XlCall.xlSheetNm, firstCell);
-                    XlCall.Excel(XlCall.xlcWorkbookSelect, new object[] { firstCellSheet });
-                    object oldSelectionOnArraySheet = XlCall.Excel(XlCall.xlfSelection);
+                    var firstCellSheet = (string)XlCall.Excel(XlCall.xlSheetNm, firstCell);
+                    XlCall.Excel(XlCall.xlcWorkbookSelect, firstCellSheet);
+                    var oldSelectionOnArraySheet = XlCall.Excel(XlCall.xlfSelection);
                     XlCall.Excel(XlCall.xlcFormulaGoto, firstCell);
 
                     // Extend the selection to the whole array and clear
                     XlCall.Excel(XlCall.xlcSelectSpecial, 6);
-                    ExcelReference oldArray = (ExcelReference)XlCall.Excel(XlCall.xlfSelection);
+                    var oldArray = (ExcelReference)XlCall.Excel(XlCall.xlfSelection);
 
                     oldArray.SetValue(ExcelEmpty.Value);
                     XlCall.Excel(XlCall.xlcSelect, oldSelectionOnArraySheet);
                     XlCall.Excel(XlCall.xlcFormulaGoto, oldSelectionOnActiveSheet);
                 }
                 // Get the formula and convert to R1C1 mode
-                bool isR1C1Mode = (bool)XlCall.Excel(XlCall.xlfGetWorkspace, 4);
-                string formulaR1C1 = formula;
+                var isR1C1Mode = (bool)XlCall.Excel(XlCall.xlfGetWorkspace, 4);
+                var formulaR1C1 = formula;
                 if (!isR1C1Mode)
                 {
                     // Set the formula into the whole target
@@ -92,7 +92,7 @@ namespace NeuralNetworksExcel
                 }
                 // Must be R1C1-style references
                 object ignoredResult;
-                XlCall.XlReturn retval = XlCall.TryExcel(XlCall.xlcFormulaArray, out ignoredResult, formulaR1C1, target);
+                var retval = XlCall.TryExcel(XlCall.xlcFormulaArray, out ignoredResult, formulaR1C1, target);
                 if (retval != XlCall.XlReturn.XlReturnSuccess)
                 {
                     // TODO: Consider what to do now!?
@@ -111,7 +111,7 @@ namespace NeuralNetworksExcel
         static void AsyncRunMacro(string macroName)
         {
             // Do this on a new thread....
-            Thread newThread = new Thread(delegate ()
+            var newThread = new Thread(delegate ()
             {
                 while (true)
                 {
@@ -164,7 +164,7 @@ namespace NeuralNetworksExcel
 
         static bool IsRetry(COMException e)
         {
-            uint errorCode = (uint)e.ErrorCode;
+            var errorCode = (uint)e.ErrorCode;
             switch (errorCode)
             {
                 case RPC_E_SERVERCALL_RETRYLATER:

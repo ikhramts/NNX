@@ -14,7 +14,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         private readonly object[,] _targets = {{1, 0}, {0.0, 1}};
         private int _numHidden = 1;
 
-        private IList<InputOutput> _actualInputs = null; 
+        private IList<InputOutput> _actualInputs; 
 
         public TrainTwoLayerPerceptronTests()
         {
@@ -107,7 +107,8 @@ namespace NNX.Tests.ExcelFuncionsTests
         {
             var trainerMock = SetupInspectingMockTrainer();
             ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
-            trainerMock.Verify(t => t.Train(It.IsAny<IList<InputOutput>>()), Times.Exactly(1));
+            trainerMock.Verify(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<NeuralNetworkConfig>()), 
+                               Times.Exactly(1));
         }
 
         [Fact]
@@ -124,15 +125,6 @@ namespace NNX.Tests.ExcelFuncionsTests
             _actualInputs[0].Output.Should().Equal(Convert.ToDouble(_targets[0, 0]), Convert.ToDouble(_targets[0, 1]));
             _actualInputs[1].Output.Should().Equal(Convert.ToDouble(_targets[1, 0]), Convert.ToDouble(_targets[1, 1]));
         }
-
-        [Fact]
-        public void ShouldNotAddNeuralNetworkConfigToTrainerConfig()
-        {
-            ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
-            var trainerConfig = ObjectStore.Get<TrainerConfig>("config");
-            trainerConfig.NeuralNetworkConfig.Should().BeNull();
-        }
-
 
         [Theory]
         [MemberData("GetBadInputValues")]
@@ -181,7 +173,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             return new[]
             {
                 new object[] {"x"},
-                new object[] {new object()},
+                new[] {new object()},
                 new object[] {new Exception()}, 
             };
         } 
@@ -191,9 +183,9 @@ namespace NNX.Tests.ExcelFuncionsTests
             var trainerMock = new Mock<ITrainer>();
             trainerMock.SetupAllProperties();
             _actualInputs = null;
-            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>()))
-                .Callback((IList<InputOutput> l) => _actualInputs = l)
-                .Returns((IList<InputOutput> l) => new TwoLayerPerceptron(1, 1, 1));
+            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<NeuralNetworkConfig>()))
+                .Callback((IList<InputOutput> l, NeuralNetworkConfig c) => _actualInputs = l)
+                .Returns((IList<InputOutput> l, NeuralNetworkConfig c) => new TwoLayerPerceptron(1, 1, 1));
             var trainer = trainerMock.Object;
             TrainerProvider.GetTrainer = () => trainer;
             return trainerMock;

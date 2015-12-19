@@ -15,7 +15,7 @@ namespace NeuralNetworks.Training
             Config = config;
         }
 
-        public INeuralNetwork Train(IList<InputOutput> trainingSet)
+        public INeuralNetwork Train(IList<InputOutput> trainingSet, NeuralNetworkConfig nnConfig)
         {
             if (Config == null)
                 throw new NeuralNetworkException("Trainer is missing Config property.");
@@ -25,13 +25,13 @@ namespace NeuralNetworks.Training
             if (numEpochs <= 0)
                 throw new NeuralNetworkException("Config.NumEpochs property should be a positive integer.  Was: " + Config.NumEpochs);
 
-            if (Config.NeuralNetworkConfig == null)
-                throw new NeuralNetworkException("Config property is missing NeuralNetworkConfig.");
+            if (nnConfig == null)
+                throw new ArgumentNullException(nameof(nnConfig));
 
             var rand = RandomProvider.GetRandom(Config.Seed);
-            var nn = NeuralNetworkBuilder.Build(Config.NeuralNetworkConfig);
+            var nn = NeuralNetworkBuilder.Build(nnConfig);
 
-            if (Config.NeuralNetworkConfig.Weights == null)
+            if (nnConfig.Weights == null)
                 InitializeWeights(nn, rand);
 
             var prevWeightGradients = nn.Weights.DeepClone();
