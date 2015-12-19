@@ -4,7 +4,7 @@ namespace NeuralNetworks
 {
     public static class ErrorCalculations
     {
-        public static double CrossEntropyError(double[] output, double[] target)
+        public static double CrossEntropyError(double[] target, double[] output)
         {
             if (output.Length != target.Length)
                 throw new NeuralNetworkException("Length of 'output' argument (" + output.Length +
@@ -19,7 +19,7 @@ namespace NeuralNetworks
             return error;
         }
 
-        public static double MeanSquareError(double[] output, double[] target)
+        public static double MeanSquareError(double[] target, double[] output)
         {
             if (output.Length != target.Length)
                 throw new NeuralNetworkException("Length of 'output' argument (" + output.Length +

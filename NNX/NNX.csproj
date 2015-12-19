@@ -48,7 +48,6 @@
     <Compile Include="MatrixExtensions.cs" />
     <Compile Include="ExcelFunctions.cs" />
     <Compile Include="ListExtensions.cs" />
-    <Compile Include="NeuralNetwork\TwoLayerPerceptronConfig.cs" />
     <Compile Include="NNXException.cs" />
     <Compile Include="ObjectStore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

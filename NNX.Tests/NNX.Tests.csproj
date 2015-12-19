@@ -74,7 +74,6 @@
     <Compile Include="ExcelFuncionsTests\GetMeanSquareErrorTests.cs" />
     <Compile Include="ExcelFuncionsTests\GetWeightsTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTrainerConfigTests.cs" />
-    <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronConfigTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\SampleData.cs" />
     <Compile Include="ExcelFuncionsTests\TrainTwoLayerPerceptronTests.cs" />

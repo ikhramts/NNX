@@ -4,7 +4,6 @@ using System.Linq;
 using ExcelDna.Integration;
 using NeuralNetworks;
 using NeuralNetworks.Training;
-using NNX.NeuralNetwork;
 
 namespace NNX
 {
@@ -28,23 +27,6 @@ namespace NNX
 
             ObjectStore.Add(name, config);
             return name;
-        }
-
-        [ExcelFunction(Name = "nnMakeTwoLayerPerceptronConfig")]
-        public static string MakeTwoLayerPerceptronConfig(string configName, int numHiddenNodes)
-        {
-            if (numHiddenNodes <= 0)
-                throw new NNXException("Numebr of hidden nodes must be greater than zero; " + 
-                                        $"provided number was {numHiddenNodes}.");
-
-            var config = new TwoLayerPerceptronConfig
-            {
-                NumHiddenNodes = numHiddenNodes
-            };
-
-            ObjectStore.Add(configName, config);
-
-            return configName;
         }
 
         [ExcelFunction(Name = "nnMakeTwoLayerPerceptron")]
@@ -190,13 +172,13 @@ namespace NNX
         [ExcelFunction(Name = "nnGetCrossEntropyError")]
         public static double GetCrossEntropyError(double[] expected, double[] actual)
         {
-            return ErrorCalculations.CrossEntropyError(actual, expected);
+            return ErrorCalculations.CrossEntropyError(expected, actual);
         }
 
         [ExcelFunction(Name = "nnGetMeanSquareError")]
         public static double GetMeanSquareError(double[] expected, double[] actual)
         {
-            return ErrorCalculations.MeanSquareError(actual, expected);
+            return ErrorCalculations.MeanSquareError(expected, actual);
         }
 
         //===================== Private helpers =============================

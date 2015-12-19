@@ -75,7 +75,7 @@ namespace NeuralNetworks.Training
                 nn.SetInputs(inputOutput.Input);
                 nn.FeedForward();
 
-                error += ErrorCalculations.CrossEntropyError(nn.Outputs, inputOutput.Output);
+                error += ErrorCalculations.CrossEntropyError(inputOutput.Output, nn.Outputs);
             }
 
             return error / testSet.Count;
