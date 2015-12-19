@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using FluentAssertions;
 using Moq;
@@ -11,9 +10,11 @@ namespace NNX.Tests.ExcelFuncionsTests
 {
     public class TrainTwoLayerPerceptronTests : ObjectStoreTestBase
     {
-        private readonly double[,] _inputs = {{1, 2}, {3, 4}};
-        private readonly double[,] _targets = {{1, 0}, {0, 1}};
+        private readonly object[,] _inputs = {{1, 2.0}, {3, 4.0}};
+        private readonly object[,] _targets = {{1, 0}, {0.0, 1}};
         private int _numHidden = 1;
+
+        private IList<InputOutput> _actualInputs = null; 
 
         public TrainTwoLayerPerceptronTests()
         {
@@ -55,7 +56,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         [Fact]
         public void IfHeighOfInputsDoesNotMatchHeightOfTargets_Throw()
         {
-            var targets = new double[,] {{0, 1}};
+            var targets = new object[,] {{0, 1}};
             Action action = () => ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, targets, _numHidden);
             action.ShouldThrow<NNXException>()
                 .WithMessage(
@@ -104,14 +105,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         [Fact]
         public void ShouldInvokeTrainOnce()
         {
-            var trainerMock = new Mock<ITrainer>();
-            trainerMock.SetupAllProperties();
-            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>()))
-                .Returns((IList < InputOutput > l) => new TwoLayerPerceptron(1, 1, 1));
-            var trainer = trainerMock.Object;
-
-            TrainerProvider.GetTrainer = () => trainer;
-
+            var trainerMock = SetupInspectingMockTrainer();
             ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
             trainerMock.Verify(t => t.Train(It.IsAny<IList<InputOutput>>()), Times.Exactly(1));
         }
@@ -119,23 +113,16 @@ namespace NNX.Tests.ExcelFuncionsTests
         [Fact]
         public void ShouldPassInputsAndTargetsToTrain()
         {
-            var trainerMock = new Mock<ITrainer>();
-            trainerMock.SetupAllProperties();
-            IList<InputOutput> actualInputs = null;
-            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>()))
-                .Callback((IList<InputOutput> l) => actualInputs = l)
-                .Returns((IList<InputOutput> l) => new TwoLayerPerceptron(1, 1, 1));
-            var trainer = trainerMock.Object;
-            TrainerProvider.GetTrainer = () => trainer;
+            SetupInspectingMockTrainer();
 
             ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
 
-            actualInputs.Should().NotBeNull();
-            actualInputs.Count.Should().Be(2);
-            actualInputs[0].Input.Should().Equal(_inputs[0, 0], _inputs[0, 1]);
-            actualInputs[1].Input.Should().Equal(_inputs[1, 0], _inputs[1, 1]);
-            actualInputs[0].Output.Should().Equal(_targets[0, 0], _targets[0, 1]);
-            actualInputs[1].Output.Should().Equal(_targets[1, 0], _targets[1, 1]);
+            _actualInputs.Should().NotBeNull();
+            _actualInputs.Count.Should().Be(2);
+            _actualInputs[0].Input.Should().Equal(Convert.ToDouble(_inputs[0, 0]), Convert.ToDouble(_inputs[0, 1]));
+            _actualInputs[1].Input.Should().Equal(Convert.ToDouble(_inputs[1, 0]), Convert.ToDouble(_inputs[1, 1]));
+            _actualInputs[0].Output.Should().Equal(Convert.ToDouble(_targets[0, 0]), Convert.ToDouble(_targets[0, 1]));
+            _actualInputs[1].Output.Should().Equal(Convert.ToDouble(_targets[1, 0]), Convert.ToDouble(_targets[1, 1]));
         }
 
         [Fact]
@@ -144,6 +131,72 @@ namespace NNX.Tests.ExcelFuncionsTests
             ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
             var trainerConfig = ObjectStore.Get<TrainerConfig>("config");
             trainerConfig.NeuralNetworkConfig.Should().BeNull();
+        }
+
+
+        [Theory]
+        [MemberData("GetBadInputValues")]
+        public void IfInputHasBadData_SkipPoint(object bad)
+        {
+            _inputs[0, 1] = bad;
+            SetupInspectingMockTrainer();
+
+            ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
+
+            _actualInputs.Should().NotBeNull();
+            _actualInputs.Count.Should().Be(1);
+            _actualInputs[0].Input.Should().Equal(Convert.ToDouble(_inputs[1, 0]), Convert.ToDouble(_inputs[1, 1]));
+            _actualInputs[0].Output.Should().Equal(Convert.ToDouble(_targets[1, 0]), Convert.ToDouble(_targets[1, 1]));
+        }
+
+        [Theory]
+        [MemberData("GetBadInputValues")]
+        public void IfTargetPointHasBadData_SkipPoint(object bad)
+        {
+            _targets[1, 1] = bad;
+            SetupInspectingMockTrainer();
+
+            ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
+
+            _actualInputs.Should().NotBeNull();
+            _actualInputs.Count.Should().Be(1);
+            _actualInputs[0].Input.Should().Equal(Convert.ToDouble(_inputs[0, 0]), _inputs[0, 1]);
+            _actualInputs[0].Output.Should().Equal(Convert.ToDouble(_targets[0, 0]), Convert.ToDouble(_targets[0, 1]));
+        }
+
+        [Theory]
+        [MemberData("GetBadInputValues")]
+        public void IfAllPointsAreBad_Throw(object bad)
+        {
+            _targets[1, 1] = bad;
+            _inputs[0, 1] = bad;
+
+            Action action = () => ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
+            action.ShouldThrow<NNXException>()
+                .WithMessage("*There were no good input/target point pairs.*");
+        }
+
+        public static IEnumerable<object[]> GetBadInputValues()
+        {
+            return new[]
+            {
+                new object[] {"x"},
+                new object[] {new object()},
+                new object[] {new Exception()}, 
+            };
+        } 
+
+        private Mock<ITrainer> SetupInspectingMockTrainer()
+        {
+            var trainerMock = new Mock<ITrainer>();
+            trainerMock.SetupAllProperties();
+            _actualInputs = null;
+            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>()))
+                .Callback((IList<InputOutput> l) => _actualInputs = l)
+                .Returns((IList<InputOutput> l) => new TwoLayerPerceptron(1, 1, 1));
+            var trainer = trainerMock.Object;
+            TrainerProvider.GetTrainer = () => trainer;
+            return trainerMock;
         }
     }
 

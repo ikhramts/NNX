@@ -66,11 +66,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ErrorCalculationsTests.cs" />
-    <Compile Include="DataFlow\InputSetTests.cs" />
     <Compile Include="ListExtensionTests.cs" />
     <Compile Include="NeuralNetworkBuilderTests.cs" />
     <Compile Include="NeuralNetworkConfigTests.cs" />
-    <Compile Include="TestHelpers\CsvTestHelper.cs" />
     <Compile Include="TestObjects\NeuralNetworkConfigObjects.cs" />
     <Compile Include="Training\TrainerConfigTests.cs" />
     <Compile Include="Training\TrainerTests.cs" />

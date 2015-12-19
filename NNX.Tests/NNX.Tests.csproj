@@ -70,6 +70,8 @@
   <ItemGroup>
     <Compile Include="ExcelFuncionsTests\ClearAllObjectsTests.cs" />
     <Compile Include="ExcelFuncionsTests\FeedForwardTests.cs" />
+    <Compile Include="ExcelFuncionsTests\GetCrossEntropyErrorTests.cs" />
+    <Compile Include="ExcelFuncionsTests\GetMeanSquareErrorTests.cs" />
     <Compile Include="ExcelFuncionsTests\GetWeightsTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTrainerConfigTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronConfigTests.cs" />

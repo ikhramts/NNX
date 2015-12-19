@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using NeuralNetworks;
 
 namespace NNX
 {
@@ -23,5 +26,17 @@ namespace NNX
 
             return result;
         }
+
+        public static double[] ToDoubles<T>(this IList<T> list)
+        {
+            var result = new double[list.Count];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                result[i] = Convert.ToDouble(list[i]);
+            }
+
+            return result;
+        } 
     }
 }

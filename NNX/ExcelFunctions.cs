@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ExcelDna.Integration;
 using NeuralNetworks;
 using NeuralNetworks.Training;
@@ -72,7 +73,7 @@ namespace NNX
 
         [ExcelFunction(Name = "nnTrainTwoLayerPerceptron")]
         public static string TrainTwoLayerPerceptron(string neuralNetworkName, string trainerConfigName, 
-            double[,] inputs, double[,] targets, int numHiddenNodes)
+            object[,] inputs, object[,] targets, int numHiddenNodes)
         {
             // Check inputs.
             if (numHiddenNodes <= 0)
@@ -90,22 +91,35 @@ namespace NNX
             var numPoints = numTargetPoints;
 
             var inputTargets = new List<InputOutput>(numPoints);
+            var inputWidth = inputs.GetLength(1);
+            var targedWidth = targets.GetLength(1);
 
             for (var i = 0; i < numPoints; i++)
             {
+                var rawInput = inputs.ExtractRow(i);
+
+                if (!rawInput.All(r => r is double || r is int))
+                    continue;
+
+                var rawTarget = targets.ExtractRow(i);
+
+                if (!rawTarget.All(t => t is double || t is int))
+                    continue;
+
+
                 var inputTarget = new InputOutput
                 {
-                    Input = inputs.ExtractRow(i),
-                    Output = targets.ExtractRow(i)
+                    Input = rawInput.ToDoubles(),
+                    Output = rawTarget.ToDoubles()
                 };
 
                 inputTargets.Add(inputTarget);
             }
 
-            // Prepare configs.
-            var inputWidth = inputs.GetLength(1);
-            var targedWidth = targets.GetLength(1);
+            if (!inputTargets.Any())
+                throw new NNXException("There were no good input/target point pairs.");
 
+            // Prepare configs.
             var nnConfig = new NeuralNetworkConfig
             {
                 NetworkType = "TwoLayerPerceptron",
@@ -171,6 +185,18 @@ namespace NNX
 
             ResizeOutputToArray(result);
             return result;
+        }
+
+        [ExcelFunction(Name = "nnGetCrossEntropyError")]
+        public static double GetCrossEntropyError(double[] expected, double[] actual)
+        {
+            return ErrorCalculations.CrossEntropyError(actual, expected);
+        }
+
+        [ExcelFunction(Name = "nnGetMeanSquareError")]
+        public static double GetMeanSquareError(double[] expected, double[] actual)
+        {
+            return ErrorCalculations.MeanSquareError(actual, expected);
         }
 
         //===================== Private helpers =============================

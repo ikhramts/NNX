@@ -56,12 +56,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataFlow\IInputSet.cs" />
-    <Compile Include="DataFlow\InputOutputSet.cs" />
-    <Compile Include="DataFlow\InputOutputTargetSet.cs" />
-    <Compile Include="DataFlow\InputSet.cs" />
-    <Compile Include="DataFlow\CsvDataLoader.cs" />
-    <Compile Include="DataFlow\IOutputSet.cs" />
     <Compile Include="ErrorCalculations.cs" />
     <Compile Include="INeuralNetwork.cs" />
     <Compile Include="ListExtensions.cs" />
@@ -75,11 +69,8 @@
     <Compile Include="Training\Trainer.cs" />
     <Compile Include="Training\TrainerConfig.cs" />
     <Compile Include="Training\TrainerProvider.cs" />
-    <Compile Include="Training\TrainingResult.cs" />
-    <Compile Include="Training\TrainingRun.cs" />
     <Compile Include="TwoLayerPerceptron.cs" />
     <Compile Include="NeuralNetworkException.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
