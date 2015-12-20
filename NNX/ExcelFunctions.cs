@@ -160,9 +160,8 @@ namespace NNX
         public static double[,] FeedForward(string neuralNetworkName, double[] inputs)
         {
             var nn = ObjectStore.Get<INeuralNetwork>(neuralNetworkName);
-            nn.SetInputs(inputs);
-            nn.FeedForward();
-            var result = nn.Outputs.ToHorizontal2DArray();
+            var outputs = nn.FeedForward(inputs);
+            var result = outputs.Output.ToHorizontal2DArray();
 
             ResizeOutputToArray(result);
             return result;

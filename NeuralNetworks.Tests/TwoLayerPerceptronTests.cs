@@ -1,4 +1,5 @@
 ﻿using System;
+using FluentAssertions;
 using Xunit;
 
 namespace NeuralNetworks.Tests
@@ -12,11 +13,8 @@ namespace NeuralNetworks.Tests
         {
             var nn = new TwoLayerPerceptron(1, 2, 4);
             Assert.Equal(1, nn.NumInputs);
-            Assert.Equal(2, nn.Inputs.Length);
             Assert.Equal(2, nn.NumHidden);
-            Assert.Equal(3, nn.Hidden.Length);
             Assert.Equal(4, nn.NumOutputs);
-            Assert.Equal(4, nn.Outputs.Length);
 
             Assert.Equal(4, nn.HiddenWeights.Length);
             Assert.Equal(12, nn.OutputWeights.Length);
@@ -118,7 +116,25 @@ namespace NeuralNetworks.Tests
         }
 
         [Fact]
-        public void FeedForwardTest()
+        public void FeedForward_ShouldMakeOutput()
+        {
+            var nn = GetNeuralNetwork();
+
+            var expectedOutput = new double[3];
+            expectedOutput[0] = 0.18280661189982;
+            expectedOutput[1] = 0.305765321819331;
+            expectedOutput[2] = 0.511428066280849;
+
+            var result = nn.FeedForward(GetSampleInputs());
+
+            Assert.Equal(expectedOutput.Length, result.Output.Length);
+
+            for (var k = 0; k < expectedOutput.Length; k++)
+                Assert.Equal(expectedOutput[k], result.Output[k], Precision);
+        }
+
+        [Fact]
+        public void FeedForward_ShouldProduceHiddenNodeValues()
         {
             var nn = GetNeuralNetwork();
             var expectedHidden = new double[7];
@@ -130,25 +146,31 @@ namespace NeuralNetworks.Tests
             expectedHidden[5] = 0.716297870199025;
             expectedHidden[6] = 1;
 
-            var expectedOutput = new double[3];
-            expectedOutput[0] = 0.18280661189982;
-            expectedOutput[1] = 0.305765321819331;
-            expectedOutput[2] = 0.511428066280849;
+            var result = nn.FeedForward(GetSampleInputs());
 
-            nn.FeedForward();
+            result.HiddenLayers.Should().NotBeNullOrEmpty();
+            result.HiddenLayers.Should().HaveCount(1);
 
-            Assert.Equal(expectedHidden.Length, nn.Hidden.Length);
-            Assert.Equal(expectedOutput.Length, nn.Outputs.Length);
+            var actualHidden = result.HiddenLayers[0];
 
-            for (int j = 0; j < expectedHidden.Length; j++)
-                Assert.Equal(expectedHidden[j], nn.Hidden[j], Precision);
+            actualHidden.Should().HaveCount(expectedHidden.Length);
 
-            for (int k = 0; k < expectedOutput.Length; k++)
-                Assert.Equal(expectedOutput[k], nn.Outputs[k], Precision);
+            for (var k = 0; k < expectedHidden.Length; k++)
+                Assert.Equal(expectedHidden[k], actualHidden[k], Precision);
+
         }
 
         [Fact]
-        public void CalculateGradsTest()
+        public void FeedForward_IfInputLengthDoesNotMatchNumInputs_Throw()
+        {
+            var nn = GetNeuralNetwork();
+            Action action = () => nn.FeedForward(new[] {0.0});
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Expected input length to be {nn.NumInputs} but got 1.*");
+        }
+
+        [Fact]
+        public void CalculateGrads_ShouldCalculateGrads()
         {
             var expectedOutputWeightGrads = new[]						
             {						
@@ -165,15 +187,10 @@ namespace NeuralNetworks.Tests
                 -0.00345911181176317, 	-0.00691822362352634, 	-0.0103773354352895, 	-0.0138364472470527, 	-0.0345911181176317, 		
                 -0.00336341680728173, 	-0.00672683361456347, 	-0.0100902504218452, 	-0.0134536672291269, 	-0.0336341680728173, 		
                 -0.00326905869764401, 	-0.00653811739528801, 	-0.00980717609293202, 	-0.013076234790576, 	-0.0326905869764401
-            };						
+           };
 
             var nn = GetNeuralNetwork();
-            nn.FeedForward();
-            
-            //var newPrevHiddenWeightGrads = nn.HiddenWeightGrads.Clone();
-            //var newPrevOutputWeightGrads = nn.OutputWeightGrads.Clone();
-
-            var result = nn.CalculateGradients(new[] { 0.0, 0.0, 1.0 });
+            var result = nn.CalculateGradients(GetSampleInputs(), GetSampleTargets());
 
             Assert.NotNull(result);
             Assert.Equal(2, result.Length);
@@ -188,19 +205,30 @@ namespace NeuralNetworks.Tests
 
             for (var ij = 0; ij < expectedHiddenWeightGrads.Length; ij++)
                 Assert.Equal(expectedHiddenWeightGrads[ij], resultHiddenGrads[ij], Precision);
+        }
 
-            //Assert.Equal(newPrevHiddenWeightGrads, nn.PrevHiddenWeightGrads);
-            //Assert.Equal(newPrevOutputWeightGrads, nn.PrevOutputWeightGrads);
+        [Fact]
+        public void CalculateGrads_IfInputLengthNotEqualNumInputs_Throw()
+        {
+            var nn = GetNeuralNetwork();
+            Action action = () => nn.CalculateGradients(new[] { 0.0 }, GetSampleTargets());
+            action.ShouldThrow<NeuralNetworkException>();
+        }
+
+        [Fact]
+        public void CalculateGrads_IfTargetLengthNotEqualNumOutputs_Throw()
+        {
+            var nn = GetNeuralNetwork();
+            Action action = () => nn.CalculateGradients(GetSampleInputs(), new[] { 0.0 });
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Expected target length to be {nn.NumOutputs} but got 1.*");
+
         }
 
         private static TwoLayerPerceptron GetNeuralNetwork()
         {
             // Setup generated from NeuralNetworksTests.xlsx in this folder.
             var nn = new TwoLayerPerceptron(4, 6, 3);
-            nn.Inputs[0] = 0.1;
-            nn.Inputs[1] = 0.2;
-            nn.Inputs[2] = 0.3;
-            nn.Inputs[3] = 0.4;
 
             nn.HiddenWeights[0] = 0.1; nn.HiddenWeights[1] = 0.2; nn.HiddenWeights[2] = 0.3; nn.HiddenWeights[3] = 0.4; nn.HiddenWeights[4] = 0.5;
             nn.HiddenWeights[5] = 0.11; nn.HiddenWeights[6] = 0.21; nn.HiddenWeights[7] = 0.31; nn.HiddenWeights[8] = 0.41; nn.HiddenWeights[9] = 0.51;
@@ -215,6 +243,9 @@ namespace NeuralNetworks.Tests
 
             return nn;
         }
+
+        private static double[] GetSampleInputs() => new[] {0.1, 0.2, 0.3, 0.4};
+        private static double[] GetSampleTargets() => new[] { 0.0, 0.0, 1.0 };
 
         [Fact]
         public void GetConfig()
@@ -239,16 +270,6 @@ namespace NeuralNetworks.Tests
             Assert.Equal(expected.Weights[1], config.Weights[1]);
         }
 
-        [Theory]
-        [InlineData(1)]
-        [InlineData(3)]
-        public void SetInputs_IfArgLengthNotEqualToInputLength_Throw(int argLength)
-        {
-            var arg = new double[argLength];
-            var nn = new TwoLayerPerceptron(2, 2, 2);
-            Assert.Throws<NeuralNetworkException>(() => nn.SetInputs(arg));
-        }
-            
         public static NeuralNetworkConfig GetSampleConfig()
         {
             return TestObjects.NeuralNetworkConfigObjects.GetTwoLayerPerceptronConfig();

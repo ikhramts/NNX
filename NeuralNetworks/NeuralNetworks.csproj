@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ErrorCalculations.cs" />
+    <Compile Include="FeedForwardResult.cs" />
     <Compile Include="INeuralNetwork.cs" />
     <Compile Include="ListExtensions.cs" />
     <Compile Include="InputOutput.cs" />

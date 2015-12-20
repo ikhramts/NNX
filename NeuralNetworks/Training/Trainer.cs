@@ -56,9 +56,7 @@ namespace NeuralNetworks.Training
                 if (nn.NumOutputs != targetLength)
                     throw new NeuralNetworkException("Training input had " + targetLength + " while neural network expected " + nn.NumOutputs);
 
-                nn.SetInputs(inputOutput.Input);
-                nn.FeedForward();
-                var gradients = nn.CalculateGradients(inputOutput.Output);
+                var gradients = nn.CalculateGradients(inputOutput.Input, inputOutput.Output);
                 AdjustWeights(nn, gradients, prevWeightGradients);
                 gradients.DeepCopyTo(prevWeightGradients);
             }
@@ -72,10 +70,8 @@ namespace NeuralNetworks.Training
 
             foreach (var inputOutput in testSet)
             {
-                nn.SetInputs(inputOutput.Input);
-                nn.FeedForward();
-
-                error += ErrorCalculations.CrossEntropyError(inputOutput.Output, nn.Outputs);
+                var result = nn.FeedForward(inputOutput.Input);
+                error += ErrorCalculations.CrossEntropyError(inputOutput.Output, result.Output);
             }
 
             return error / testSet.Count;
@@ -87,10 +83,8 @@ namespace NeuralNetworks.Training
 
             foreach (var inputOutput in testSet)
             {
-                nn.SetInputs(inputOutput.Input);
-                nn.FeedForward();
                 var expected = inputOutput.Output.MaxIndex();
-                var actual = nn.Outputs.MaxIndex();
+                var actual = nn.FeedForward(inputOutput.Input).Output.MaxIndex();
 
                 numHits += expected == actual ? 1 : 0;
             }

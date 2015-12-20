@@ -12,10 +12,6 @@ namespace NeuralNetworks
         public int NumHiddenWeights { get; private set; }
         public int NumOutputWeights { get; private set; }
 
-        public double[] Inputs { get; set; }
-        public double[] Hidden { get; set; }
-        public double[] Outputs { get; set; }
-
         public double[] HiddenWeights { get; set; }
         public double[] OutputWeights { get; set; }
 
@@ -74,25 +70,10 @@ namespace NeuralNetworks
             NumHiddenWeights = (NumInputs + 1) * NumHidden;
             NumOutputWeights = (NumHidden + 1) * NumOutputs;
 
-            Inputs = new double[NumInputs + 1];
-            Hidden = new double[NumHidden + 1];
-            Outputs = new double[NumOutputs];
-
-            Inputs[NumInputs] = 1;
-            Hidden[NumHidden] = 1;
-
             HiddenWeights = new double[NumHiddenWeights];
             OutputWeights = new double[NumOutputWeights];
         }
 
-        public void SetInputs(double[] inputs)
-        {
-            if (inputs.Length != NumInputs)
-                throw new NeuralNetworkException($"Input array length ({inputs.Length}) does not match "+
-                                                    $"neural network input length ({NumInputs})");
-
-            Array.Copy(inputs, Inputs, NumInputs);
-        }
 
         public void InitializeWeights(Random customRand = null)
         {
@@ -105,17 +86,28 @@ namespace NeuralNetworks
                 OutputWeights[jk] = random.NextDouble() * 0.2 - 0.1;
         }
 
-        public void FeedForward()
+        public FeedForwardResult FeedForward(double[] input)
         {
+            if (input.Length != NumInputs)
+                throw new NeuralNetworkException($"Expected input length to be {NumInputs} but got {input.Length}.");
+
+            var result = new FeedForwardResult();
+            var inputsWithBias = GetInputsWithBias(input);
+            result.InputWithBias = inputsWithBias;
+
+            var hidden = new double[NumHidden + 1];
+            hidden[NumHidden] = 1; // Bias.
+            result.HiddenLayers = new [] {hidden};
+
             for (var j = 0; j < NumHidden; j++)
             {
                 var preActivation = 0.0;
                 var offset = j * (NumInputs + 1);
 
                 for (var i = 0; i <= NumInputs; i++)
-                    preActivation += HiddenWeights[offset + i] * Inputs[i];
+                    preActivation += HiddenWeights[offset + i] * inputsWithBias[i];
 
-                Hidden[j] = Math.Tanh(preActivation);
+                hidden[j] = Math.Tanh(preActivation);
             }
 
             var sumOfPreOutputs = 0.0;
@@ -127,18 +119,32 @@ namespace NeuralNetworks
                 var offset = k * (NumHidden + 1);
 
                 for (var j = 0; j < NumHidden + 1; j++)
-                    preOutput += OutputWeights[offset + j] * Hidden[j];
+                    preOutput += OutputWeights[offset + j] * hidden[j];
 
                 preOutputs[k] = Math.Exp(preOutput);
                 sumOfPreOutputs += preOutputs[k];
             }
 
+            var outputs = new double[NumOutputs];
+
             for (var k = 0; k < NumOutputs; k++)
-                Outputs[k] = preOutputs[k] / sumOfPreOutputs;
+                outputs[k] = preOutputs[k] / sumOfPreOutputs;
+
+            result.Output = outputs;
+
+            return result;
         }
 
-        public double[][] CalculateGradients(double[] target)
+        public double[][] CalculateGradients(double[] input, double[] target)
         {
+            if (target.Length != NumOutputs)
+                throw new NeuralNetworkException($"Expected target length to be {NumOutputs} but got {target.Length}.");
+
+            var feedForwardResult = FeedForward(input);
+            var outputs = feedForwardResult.Output;
+            var inputsWithBias = feedForwardResult.InputWithBias;
+            var hidden = feedForwardResult.HiddenLayers[0];
+
             var newHiddenWeightGrads = new double[HiddenWeights.Length];
             var newOutputWeightGrads = new double[OutputWeights.Length];
             var preOutputGrads = new double[NumOutputs];
@@ -147,7 +153,7 @@ namespace NeuralNetworks
             // Use cross-entropy error.
             for (var k = 0; k < NumOutputs; k++)
             {
-                preOutputGrads[k] = Outputs[k] - target[k];
+                preOutputGrads[k] = outputs[k] - target[k];
             }
 
             for (var k = 0; k < NumOutputs; k++)
@@ -155,14 +161,14 @@ namespace NeuralNetworks
                 var offset = k * (NumHidden + 1);
 
                 for (var j = 0; j < NumHidden + 1; j++)
-                    newOutputWeightGrads[offset + j] = preOutputGrads[k] * Hidden[j];
+                    newOutputWeightGrads[offset + j] = preOutputGrads[k] * hidden[j];
             }
 
             for (var k = 0; k < NumOutputs; k++)
             {
                 for (var j = 0; j < NumHidden; j++)
                     preHiddenPreOutputGrads[k * NumHidden + j] = OutputWeights[k * (NumHidden + 1) + j]
-                                                                    * (1 - Hidden[j] * Hidden[j]);
+                                                                    * (1 - hidden[j] * hidden[j]);
             }
 
             for (var j = 0; j < NumHidden; j++)
@@ -176,8 +182,7 @@ namespace NeuralNetworks
                     for (var k = 0; k < NumOutputs; k++)
                         grad += preOutputGrads[k] * preHiddenPreOutputGrads[k * NumHidden + j];
 
-                    grad *= Inputs[i];
-
+                    grad *= inputsWithBias[i];
                     newHiddenWeightGrads[offset + i] = grad;
                 }
             }
@@ -185,6 +190,15 @@ namespace NeuralNetworks
             var result = new[] {newHiddenWeightGrads, newOutputWeightGrads};
 
             return result;
+        }
+
+        private double[] GetInputsWithBias(double[] inputs)
+        {
+            // We need to include bias input (=1) as an additional input at the end of the array.
+            var inputsWithBias = new double[NumInputs + 1];
+            Array.Copy(inputs, inputsWithBias, inputs.Length);
+            inputsWithBias[inputsWithBias.Length - 1] = 1;
+            return inputsWithBias;
         }
 
         public NeuralNetworkConfig GetConfig()

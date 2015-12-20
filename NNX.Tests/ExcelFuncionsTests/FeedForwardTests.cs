@@ -11,13 +11,12 @@ namespace NNX.Tests.ExcelFuncionsTests
         [Fact]
         public void ShouldFeedForward()
         {
+            var output = new[] { 0.5, 0.6 };
             var mock = new Mock<INeuralNetwork>();
-            mock.Setup(n => n.SetInputs(It.IsAny<double[]>()));
-            mock.Setup(n => n.FeedForward());
+            mock.Setup(n => n.FeedForward(It.IsAny<double[]>()))
+                .Returns((double[] inputs) => new FeedForwardResult {Output = output});
 
-            var output = new[] {0.5, 0.6};
             var expected = output.ToHorizontal2DArray();
-            mock.SetupGet(n => n.Outputs).Returns(() => new[] {0.5, 0.6});
             var nn = mock.Object;
 
             ObjectStore.Add("nn", nn);

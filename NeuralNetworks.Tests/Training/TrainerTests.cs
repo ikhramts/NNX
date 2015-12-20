@@ -279,9 +279,8 @@ namespace NeuralNetworks.Tests.Training
             mock.SetupGet(nn => nn.NumInputs).Returns(2);
             mock.SetupGet(nn => nn.NumOutputs).Returns(1);
             mock.SetupGet(nn => nn.Weights).Returns(() => weights);
-            mock.SetupGet(nn => nn.Outputs).Returns(() => new []{0.25});
-            mock.Setup(nn => nn.CalculateGradients(It.IsAny<double[]>()))
-                .Returns((double[] t) => GetSampleGradients());
+            mock.Setup(nn => nn.CalculateGradients(It.IsAny<double[]>(), It.IsAny<double[]>()))
+                .Returns((double[] i, double[] t) => GetSampleGradients());
 
             return mock;
         }
