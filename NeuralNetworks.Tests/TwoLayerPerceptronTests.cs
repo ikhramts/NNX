@@ -198,43 +198,6 @@ namespace NeuralNetworks.Tests
             //Assert.Equal(newPrevOutputWeightGrads, nn.PrevOutputWeightGrads);
         }
 
-        [Fact]
-        public void AdvanceWeightsTest()
-        {
-            var nn = GetNeuralNetwork();
-
-            nn.LearningRate = 0.05;
-            nn.Momentum = 0.01;
-            nn.QuadraticRegularization = 0.02;
-
-            var expectedOutputWeights = new[]						
-            {						
-                1.06963048439252,	1.07908763816926,	1.08854347844619,	1.09799797469234,	1.10745109387288,	1.11690280066189,	1.12384766940501,
-                1.16094802916196,	1.17029735212347,	1.17964716856905,	1.18899742743209,	1.19834807345797,	1.20769904756,	1.21285973390903,
-                1.28232148644552,	1.29206900970727,	1.30180535298477,	1.31153059787557,	1.32124483266915,	1.3309481517781,	1.34733659668596
-            };
-
-            var expectedHiddenWeights = new[]						
-            {						
-                0.0999376688227164,	0.199525337645433,	0.298713006468149,	0.397500675290866,	0.496826688227164,		
-                0.109890709180331,	0.209433418360662,	0.308576127540993,	0.407318836721324,	0.506575091803311,		
-                0.119839803170929,	0.219337606341858,	0.318435409512787,	0.417133212683716,	0.516320031709289,		
-                0.129784955590588,	0.229237911181176,	0.328290866771765,	0.426943822362353,	0.526061555905882,		
-                0.139726170840364,	0.239134341680728,	0.338142512521092,	0.436750683361456,	0.535799708403641,		
-                0.149663452934882,	0.249026905869764,	0.347990358804647,	0.446553811739529,	0.545534529348822
-            };											
-            
-            nn.FeedForward();
-            nn.CalculateGradients(new[] {0.0, 0.0, 1.0});
-            nn.AdvanceWeights();
-
-            for (var jk = 0; jk < expectedOutputWeights.Length; jk++)
-                Assert.Equal(expectedOutputWeights[jk], nn.OutputWeights[jk], Precision);
-
-            for (var ij = 0; ij < expectedHiddenWeights.Length; ij++)
-                Assert.Equal(expectedHiddenWeights[ij], nn.HiddenWeights[ij], Precision);
-        }
-
         private static TwoLayerPerceptron GetNeuralNetwork()
         {
             // Setup generated from NeuralNetworksTests.xlsx in this folder.

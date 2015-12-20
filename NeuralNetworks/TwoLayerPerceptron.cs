@@ -27,10 +27,6 @@ namespace NeuralNetworks
         public double[] PrevHiddenWeightGrads { get; set; }
         public double[] PrevOutputWeightGrads { get; set; }
 
-        public double LearningRate { get; set; }
-        public double Momentum { get; set; }
-        public double QuadraticRegularization { get; set; }
-
         private double[] _preOutputs;
         private double[] _preOutputGrads;
         private double[] _preHiddenPreOutputGrads;
@@ -209,25 +205,6 @@ namespace NeuralNetworks
             var result = new[] {newHiddenWeightGrads, newOutputWeightGrads};
 
             return result;
-        }
-
-        public void AdvanceWeights()
-        {
-            for (var ij = 0; ij < HiddenWeights.Length; ij++)
-            {
-                var prevWeight = HiddenWeights[ij];
-                HiddenWeights[ij] = prevWeight - LearningRate * HiddenWeightGrads[ij]
-                                       - Momentum * PrevHiddenWeightGrads[ij]
-                                       - QuadraticRegularization * prevWeight * prevWeight;
-            }
-
-            for (var jk = 0; jk < OutputWeights.Length; jk++)
-            {
-                var prevWeight = OutputWeights[jk];
-                OutputWeights[jk] = prevWeight - LearningRate * OutputWeightGrads[jk]
-                                       - Momentum * PrevOutputWeightGrads[jk]
-                                       - QuadraticRegularization * prevWeight * prevWeight;
-            }
         }
 
         public NeuralNetworkConfig GetConfig()

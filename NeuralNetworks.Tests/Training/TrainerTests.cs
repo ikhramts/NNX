@@ -217,19 +217,78 @@ namespace NeuralNetworks.Tests.Training
             nn.Weights[1].Should().Equal(expected);
         }
 
+        [Fact]
+        public void AdjustWeight_ShouldApplyLearningRate()
+        {
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.Momentum = 0;
+            trainerConfig.QuadraticRegularization = 0;
+            var trainer = new Trainer(trainerConfig);
+
+            var nnMock = GetMockNeuralNetwork();
+            var nn = nnMock.Object;
+
+            trainer.AdjustWeights(nn, GetSampleGradients(), GetSamplePrevGradients());
+
+            var actualWeights = nn.Weights;
+            actualWeights.Should().HaveCount(2);
+            actualWeights[0].Should().Equal(0.875, 1.75, 2.625);
+            actualWeights[1].Should().Equal(0.5);
+        }
+
+        [Fact]
+        public void AdjustWeights_ShouldApplyMomentum()
+        {
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.QuadraticRegularization = 0;
+            var trainer = new Trainer(trainerConfig);
+
+            var nnMock = GetMockNeuralNetwork();
+            var nn = nnMock.Object;
+            trainer.AdjustWeights(nn, GetSampleGradients(), GetSamplePrevGradients());
+
+            var actualWeights = nn.Weights;
+            actualWeights.Should().HaveCount(2);
+            actualWeights[0].Should().Equal(0.575, 1.35, 2.525);
+            actualWeights[1].Should().HaveCount(1);
+            actualWeights[1][0].Should().BeApproximately(0.3, 1e-12);
+        }
+
+        [Fact]
+        public void AdjustWeights_ShouldApplyQuadraticRegularization()
+        {
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.Momentum = 0;
+            var trainer = new Trainer(trainerConfig);
+
+            var nnMock = GetMockNeuralNetwork();
+            var nn = nnMock.Object;
+            trainer.AdjustWeights(nn, GetSampleGradients(), GetSamplePrevGradients());
+
+            var actualWeights = nn.Weights;
+            actualWeights.Should().HaveCount(2);
+            actualWeights[0].Should().Equal(0.825, 1.65, 2.475);
+            actualWeights[1].Should().HaveCount(1);
+            actualWeights[1][0].Should().BeApproximately(0.425, 1e-12);
+        }
+
         public static Mock<INeuralNetwork> GetMockNeuralNetwork()
         {
-            var weights = new[] {new[] {1.0, 2.0, 3.0}, new[] {1.5}};
+            var weights = GetSampleWeights();
             var mock = new Mock<INeuralNetwork>();
             mock.SetupGet(nn => nn.NumInputs).Returns(2);
             mock.SetupGet(nn => nn.NumOutputs).Returns(1);
             mock.SetupGet(nn => nn.Weights).Returns(() => weights);
             mock.SetupGet(nn => nn.Outputs).Returns(() => new []{0.25});
             mock.Setup(nn => nn.CalculateGradients(It.IsAny<double[]>()))
-                .Returns((double[] t) => new[] {new[] {0.25, 0.5, 0.75}, new[] {2.0}});
+                .Returns((double[] t) => GetSampleGradients());
 
             return mock;
         }
+
+        public static double[][] GetSampleGradients() => new[] {new[] {0.25, 0.5, 0.75}, new[] {2.0}};
+        public static double[][] GetSampleWeights() => new[] {new[] {1.0, 2.0, 3.0}, new[] {1.5}};
+        public static double[][] GetSamplePrevGradients() => new[] {new[] {0.3, 0.4, 0.1}, new[] {0.2}};
 
     }
 }
