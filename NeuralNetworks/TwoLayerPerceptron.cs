@@ -21,16 +21,6 @@ namespace NeuralNetworks
 
         public double[][] Weights => new[] {HiddenWeights, OutputWeights};
 
-        public double[] OutputWeightGrads { get; set; }
-        public double[] HiddenWeightGrads { get; set; }
-
-        public double[] PrevHiddenWeightGrads { get; set; }
-        public double[] PrevOutputWeightGrads { get; set; }
-
-        private double[] _preOutputs;
-        private double[] _preOutputGrads;
-        private double[] _preHiddenPreOutputGrads;
-
         public TwoLayerPerceptron(int numInputs, int numHidden, int numOutputs, Random customRand = null)
         {
             InitState(numInputs, numHidden, numOutputs);
@@ -87,20 +77,12 @@ namespace NeuralNetworks
             Inputs = new double[NumInputs + 1];
             Hidden = new double[NumHidden + 1];
             Outputs = new double[NumOutputs];
-            _preOutputs = new double[NumOutputs];
 
             Inputs[NumInputs] = 1;
             Hidden[NumHidden] = 1;
 
             HiddenWeights = new double[NumHiddenWeights];
             OutputWeights = new double[NumOutputWeights];
-
-            HiddenWeightGrads = new double[NumHiddenWeights];
-            OutputWeightGrads = new double[NumOutputWeights];
-            PrevHiddenWeightGrads = new double[NumHiddenWeights];
-            PrevOutputWeightGrads = new double[NumOutputWeights];
-            _preOutputGrads = new double[NumOutputs];
-            _preHiddenPreOutputGrads = new double[NumOutputs * NumHidden];
         }
 
         public void SetInputs(double[] inputs)
@@ -137,6 +119,7 @@ namespace NeuralNetworks
             }
 
             var sumOfPreOutputs = 0.0;
+            var preOutputs = new double[NumOutputs];
 
             for (var k = 0; k < NumOutputs; k++)
             {
@@ -146,23 +129,25 @@ namespace NeuralNetworks
                 for (var j = 0; j < NumHidden + 1; j++)
                     preOutput += OutputWeights[offset + j] * Hidden[j];
 
-                _preOutputs[k] = Math.Exp(preOutput);
-                sumOfPreOutputs += _preOutputs[k];
+                preOutputs[k] = Math.Exp(preOutput);
+                sumOfPreOutputs += preOutputs[k];
             }
 
             for (var k = 0; k < NumOutputs; k++)
-                Outputs[k] = _preOutputs[k] / sumOfPreOutputs;
+                Outputs[k] = preOutputs[k] / sumOfPreOutputs;
         }
 
         public double[][] CalculateGradients(double[] target)
         {
-            // Use cross-entropy error.
-            var newHiddenWeightGrads = PrevHiddenWeightGrads;
-            var newOutputWeightGrads = PrevOutputWeightGrads;
+            var newHiddenWeightGrads = new double[HiddenWeights.Length];
+            var newOutputWeightGrads = new double[OutputWeights.Length];
+            var preOutputGrads = new double[NumOutputs];
+            var preHiddenPreOutputGrads = new double[NumOutputs * NumHidden];
 
+            // Use cross-entropy error.
             for (var k = 0; k < NumOutputs; k++)
             {
-                _preOutputGrads[k] = Outputs[k] - target[k];
+                preOutputGrads[k] = Outputs[k] - target[k];
             }
 
             for (var k = 0; k < NumOutputs; k++)
@@ -170,13 +155,13 @@ namespace NeuralNetworks
                 var offset = k * (NumHidden + 1);
 
                 for (var j = 0; j < NumHidden + 1; j++)
-                    newOutputWeightGrads[offset + j] = _preOutputGrads[k] * Hidden[j];
+                    newOutputWeightGrads[offset + j] = preOutputGrads[k] * Hidden[j];
             }
 
             for (var k = 0; k < NumOutputs; k++)
             {
                 for (var j = 0; j < NumHidden; j++)
-                    _preHiddenPreOutputGrads[k * NumHidden + j] = OutputWeights[k * (NumHidden + 1) + j]
+                    preHiddenPreOutputGrads[k * NumHidden + j] = OutputWeights[k * (NumHidden + 1) + j]
                                                                     * (1 - Hidden[j] * Hidden[j]);
             }
 
@@ -189,18 +174,13 @@ namespace NeuralNetworks
                     var grad = 0.0;
 
                     for (var k = 0; k < NumOutputs; k++)
-                        grad += _preOutputGrads[k] * _preHiddenPreOutputGrads[k * NumHidden + j];
+                        grad += preOutputGrads[k] * preHiddenPreOutputGrads[k * NumHidden + j];
 
                     grad *= Inputs[i];
 
                     newHiddenWeightGrads[offset + i] = grad;
                 }
             }
-
-            PrevHiddenWeightGrads = HiddenWeightGrads;
-            PrevOutputWeightGrads = OutputWeightGrads;
-            HiddenWeightGrads = newHiddenWeightGrads;
-            OutputWeightGrads = newOutputWeightGrads;
 
             var result = new[] {newHiddenWeightGrads, newOutputWeightGrads};
 

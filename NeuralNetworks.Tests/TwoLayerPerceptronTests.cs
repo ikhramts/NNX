@@ -20,11 +20,6 @@ namespace NeuralNetworks.Tests
 
             Assert.Equal(4, nn.HiddenWeights.Length);
             Assert.Equal(12, nn.OutputWeights.Length);
-
-            Assert.Equal(4, nn.HiddenWeightGrads.Length);
-            Assert.Equal(12, nn.OutputWeightGrads.Length);
-            Assert.Equal(4, nn.PrevHiddenWeightGrads.Length);
-            Assert.Equal(12, nn.PrevOutputWeightGrads.Length);
         }
 
         [Fact]
@@ -217,23 +212,6 @@ namespace NeuralNetworks.Tests
             nn.OutputWeights[0] = 1.1; nn.OutputWeights[1] = 1.11; nn.OutputWeights[2] = 1.12; nn.OutputWeights[3] = 1.13; nn.OutputWeights[4] = 1.14; nn.OutputWeights[5] = 1.15; nn.OutputWeights[6] = 1.16;
             nn.OutputWeights[7] = 1.2; nn.OutputWeights[8] = 1.21; nn.OutputWeights[9] = 1.22; nn.OutputWeights[10] = 1.23; nn.OutputWeights[11] = 1.24; nn.OutputWeights[12] = 1.25; nn.OutputWeights[13] = 1.26;
             nn.OutputWeights[14] = 1.3; nn.OutputWeights[15] = 1.31; nn.OutputWeights[16] = 1.32; nn.OutputWeights[17] = 1.33; nn.OutputWeights[18] = 1.34; nn.OutputWeights[19] = 1.35; nn.OutputWeights[20] = 1.36;
-
-            nn.OutputWeightGrads = new[]						
-            {						
-                0.01,	0.01,	0.01,	0.01,	0.01,	0.01,	0.01,
-                0.01,	0.01,	0.01,	0.01,	0.01,	0.01,	0.01,
-                0.01,	0.01,	0.01,	0.01,	0.01,	0.01,	0.01
-            };
-
-            nn.HiddenWeightGrads = new[]						
-            {						
-                0.005,	0.005,	0.005,	0.005,	0.005,		
-                0.005,	0.005,	0.005,	0.005,	0.005,		
-                0.005,	0.005,	0.005,	0.005,	0.005,		
-                0.005,	0.005,	0.005,	0.005,	0.005,		
-                0.005,	0.005,	0.005,	0.005,	0.005,		
-                0.005,	0.005,	0.005,	0.005,	0.005
-            };						
 
             return nn;
         }
