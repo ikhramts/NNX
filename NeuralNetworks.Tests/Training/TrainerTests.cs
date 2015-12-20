@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using FluentAssertions;
 using Moq;
 using NeuralNetworks.Training;
@@ -10,14 +9,8 @@ namespace NeuralNetworks.Tests.Training
 {
     public class TrainerTests : IDisposable
     {
-        public TrainerTests()
-        {
-            NeuralNetworkBuilder.Builder = new NeuralNetworkBuilder();
-        }
-
         public void Dispose()
         {
-            NeuralNetworkBuilder.Builder = new NeuralNetworkBuilder();
             RandomProvider.GetRandom = RandomProvider.GetDefaultRandom;
         }
 
@@ -33,20 +26,19 @@ namespace NeuralNetworks.Tests.Training
         public void Train_IfMissingTrainerConfig_Throw()
         {
             var trainingSet = GetTrainingSet();
-            var nnConfig = GetSampleNNConfig();
+            var nn = Mock.Of<INeuralNetwork>();
             var trainer = new Trainer();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nnConfig));
+            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nn));
         }
 
         [Fact]
         public void Train_IfTrainingSetDoesNotMatchNetwork_Throw()
         {
             var trainerConfig = GetSampleTrainerConfig();
-            var nnConfig = GetSampleNNConfig();
-            nnConfig.Settings["NumInputs"] = "3";
             var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nnConfig));
+            var nn = new TwoLayerPerceptron(3, 1, 1);
+            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nn));
         }
 
         [Theory]
@@ -56,14 +48,37 @@ namespace NeuralNetworks.Tests.Training
         {
             var trainerConfig = GetSampleTrainerConfig();
             trainerConfig.NumEpochs = numEpochs;
-            var nnConfig = GetSampleNNConfig();
             var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
-            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nnConfig));
+            Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, GetSampleNN()));
         }
 
         [Fact]
-        public void Train_IfMissingNeuralNetworkConfig_Throw()
+        public void Train_IfInitializeWeightsIsFalse_DoNotInitializeWeights()
+        {
+            var randMock = SetupMockRandom();
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.InitializeWeights = false;
+            var trainer = new Trainer(trainerConfig);
+            trainer.Train(GetTrainingSet(), GetMockNeuralNetwork().Object);
+
+            randMock.Verify(r => r.NextDouble(), Times.Never);
+        }
+
+        [Fact]
+        public void Train_IfInitializeWeightsIsTrue_RandomizeInitialWeights()
+        {
+            var randMock = SetupMockRandom();
+            var trainerConfig = GetSampleTrainerConfig();
+            trainerConfig.InitializeWeights = true;
+            var trainer = new Trainer(trainerConfig);
+            trainer.Train(GetTrainingSet(), GetMockNeuralNetwork().Object);
+
+            randMock.Verify(r => r.NextDouble(), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void Train_IfMissingNeuralNetwork_Throw()
         {
             var trainerConfig = GetSampleTrainerConfig();
             var trainer = new Trainer(trainerConfig);
@@ -74,42 +89,16 @@ namespace NeuralNetworks.Tests.Training
         }
 
         [Fact]
-        public void Train_ShouldReturnConfiguredNetwork()
-        {
-            var builder = new NeuralNetworkBuilder();
-            var builderMock = new Mock<NeuralNetworkBuilder>();
-            builderMock.Setup(b => b.CustomBuild(It.IsAny<NeuralNetworkConfig>()))
-                .Returns((NeuralNetworkConfig c) => builder.CustomBuild(c));
-
-            NeuralNetworkBuilder.Builder = builderMock.Object;
-
-            var trainerConfig = GetSampleTrainerConfig();
-            var nnConfig = GetSampleNNConfig();
-            var trainer = new Trainer(trainerConfig);
-            var trainingSet = GetTrainingSet();
-
-            trainer.Train(trainingSet, nnConfig);
-            builderMock.Verify(b => b.CustomBuild(nnConfig), Times.Exactly(1));
-        }
-
-
-        [Fact]
         public void Train_OneEpoch()
         {
             var mockNeuralNet = GetMockNeuralNetwork();
-
-            var builderMock = new Mock<NeuralNetworkBuilder>();
-            builderMock.Setup(b => b.CustomBuild(It.IsAny<NeuralNetworkConfig>()))
-                .Returns((NeuralNetworkConfig c) => mockNeuralNet.Object);
-
-            NeuralNetworkBuilder.Builder = builderMock.Object;
+            var nn = mockNeuralNet.Object;
 
             var trainerConfig = GetSampleTrainerConfig();
-            var nnConfig = GetSampleNNConfig();
             var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
 
-            var nn = trainer.Train(trainingSet, nnConfig);
+            trainer.Train(trainingSet, nn);
 
             nn.Should().NotBeNull();
             var weights = nn.Weights;
@@ -131,20 +120,15 @@ namespace NeuralNetworks.Tests.Training
         public void Train_TwoEpochsWithMomentum()
         {
             var mockNeuralNet = GetMockNeuralNetwork();
+            var nn = mockNeuralNet.Object;
 
-            var builderMock = new Mock<NeuralNetworkBuilder>();
-            builderMock.Setup(b => b.CustomBuild(It.IsAny<NeuralNetworkConfig>()))
-                .Returns((NeuralNetworkConfig c) => mockNeuralNet.Object);
-
-            NeuralNetworkBuilder.Builder = builderMock.Object;
 
             var trainerConfig = GetSampleTrainerConfig();
             trainerConfig.NumEpochs = 2;
-            var nnConfig = GetSampleNNConfig();
             var trainer = new Trainer(trainerConfig);
             var trainingSet = GetTrainingSet();
 
-            var nn = trainer.Train(trainingSet, nnConfig);
+            trainer.Train(trainingSet, nn);
 
             nn.Should().NotBeNull();
             var weights = nn.Weights;
@@ -177,23 +161,17 @@ namespace NeuralNetworks.Tests.Training
                 LearningRate = 0.5,
                 Momentum = 2,
                 NumEpochs = 1,
-                QuadraticRegularization = 0.1
+                QuadraticRegularization = 0.1,
+                InitializeWeights = false
             };
         }
 
-        public NeuralNetworkConfig GetSampleNNConfig()
+        public INeuralNetwork GetSampleNN()
         {
-            return new NeuralNetworkConfig
-            {
-                NetworkType = "TwoLayerPerceptron",
-                Settings = new Dictionary<string, string>
-                {
-                    {"NumInputs", "2"},
-                    {"NumHidden", "1"},
-                    {"NumOutputs", "1"},
-                },
-                Weights = new[] {new[] {1.0, 2.0, 3.0}, new[] {1.5, 0.5}}
-            };
+            var nn = new TwoLayerPerceptron(2, 1, 1);
+            nn.Weights[0] = new[] {1.0, 2.0, 3.0};
+            nn.Weights[1] = new[] {1.5, 0.5};
+            return nn;
         }
 
         [Theory]
@@ -288,6 +266,16 @@ namespace NeuralNetworks.Tests.Training
         public static double[][] GetSampleGradients() => new[] {new[] {0.25, 0.5, 0.75}, new[] {2.0}};
         public static double[][] GetSampleWeights() => new[] {new[] {1.0, 2.0, 3.0}, new[] {1.5}};
         public static double[][] GetSamplePrevGradients() => new[] {new[] {0.3, 0.4, 0.1}, new[] {0.2}};
+
+        private Mock<IRandomGenerator> SetupMockRandom()
+        {
+            var mock = new Mock<IRandomGenerator>();
+            mock.SetupAllProperties();
+            mock.Setup(r => r.Next(It.IsAny<int>())).Returns((int i) => 0);
+            mock.Setup(r => r.NextDouble()).Returns(() => 0.5);
+            RandomProvider.GetRandom = seed => mock.Object;
+            return mock;
+        }
 
     }
 }

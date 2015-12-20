@@ -23,43 +23,6 @@ namespace NeuralNetworks
             InitializeWeights(customRand);
         }
 
-        public TwoLayerPerceptron(NeuralNetworkConfig config, Random customRand = null)
-        {
-            if (config.Weights != null && config.Weights.Length != 2)
-                throw new NeuralNetworkException("Config expeced to have exactly two sets of weights. Found: " +
-                                                 +((int) config.Weights?.Length));
-
-            var numInputs = config.GetSettingInt("NumInputs");
-            var numHidden = config.GetSettingInt("NumHidden");
-            var numOutputs = config.GetSettingInt("NumOutputs");
-
-            InitState(numInputs, numHidden, numOutputs);
-
-            if (config.Weights == null)
-            {
-                InitializeWeights(customRand);
-                return;
-            }
-
-            var newHiddenWeights = config.Weights[0];
-            var newOutputWeights = config.Weights[1];
-
-            if (newHiddenWeights.Length != HiddenWeights.Length)
-            {
-                var message = $"Expected {HiddenWeights.Length} hidden weights; found {newHiddenWeights.Length}.";
-                throw new NeuralNetworkException(message);
-            }
-
-            if (newOutputWeights.Length != OutputWeights.Length)
-            {
-                var message = $"Expected {OutputWeights.Length} output weights; found {newOutputWeights.Length}.";
-                throw new NeuralNetworkException(message);
-            }
-
-            Array.Copy(newHiddenWeights, HiddenWeights, newHiddenWeights.Length);
-            Array.Copy(newOutputWeights, OutputWeights, newOutputWeights.Length);
-        }
-
         private void InitState(int numInputs, int numHidden, int numOutputs)
         {
             // Biases will be treated as extra inputs at very last position.
@@ -199,23 +162,6 @@ namespace NeuralNetworks
             Array.Copy(inputs, inputsWithBias, inputs.Length);
             inputsWithBias[inputsWithBias.Length - 1] = 1;
             return inputsWithBias;
-        }
-
-        public NeuralNetworkConfig GetConfig()
-        {
-            var config = new NeuralNetworkConfig
-            {
-                NetworkType = "TwoLayerPerceptron",
-                Settings = new Dictionary<string, string>
-                {
-                    {"NumInputs", NumInputs.ToString()},
-                    {"NumHidden", NumHidden.ToString()},
-                    {"NumOutputs", NumOutputs.ToString()},
-                },
-                Weights = Weights.DeepClone()
-            };
-
-            return config;
         }
     }
 }

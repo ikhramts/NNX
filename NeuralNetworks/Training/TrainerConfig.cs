@@ -11,6 +11,7 @@ namespace NeuralNetworks.Training
         public double QuadraticRegularization { get; set; }
         public double NumEpochs { get; set; }
         public int Seed { get; set; }
+        public bool InitializeWeights { get; set; } = true;
 
         public TrainerConfig()
         {

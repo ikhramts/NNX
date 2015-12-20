@@ -5,6 +5,6 @@ namespace NeuralNetworks.Training
     public interface ITrainer
     {
         TrainerConfig Config { get; set; }
-        INeuralNetwork Train(IList<InputOutput> trainingSet, NeuralNetworkConfig nnConfig);
+        INeuralNetwork Train(IList<InputOutput> trainingSet, INeuralNetwork nn);
     }
 }

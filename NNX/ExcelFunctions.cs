@@ -101,24 +101,12 @@ namespace NNX
             if (!inputTargets.Any())
                 throw new NNXException("There were no good input/target point pairs.");
 
-            // Prepare configs.
-            var nnConfig = new NeuralNetworkConfig
-            {
-                NetworkType = "TwoLayerPerceptron",
-                Settings = new Dictionary<string, string>
-                {
-                    {"NumInputs", inputWidth.ToString() },
-                    {"NumHidden", numHiddenNodes.ToString() },
-                    {"NumOutputs", targedWidth.ToString() },
-                }
-            };
-
-            var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
-
             // Let's go!
+            var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
             var trainer = TrainerProvider.GetTrainer();
             trainer.Config = trainerConfig;
-            var nn = trainer.Train(inputTargets, nnConfig);
+            var nn = new TwoLayerPerceptron(inputWidth, numHiddenNodes, targedWidth);
+            trainer.Train(inputTargets, nn);
             
             ObjectStore.Add(neuralNetworkName, nn);
             return neuralNetworkName;

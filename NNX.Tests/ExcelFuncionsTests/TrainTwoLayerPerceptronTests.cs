@@ -107,7 +107,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         {
             var trainerMock = SetupInspectingMockTrainer();
             ExcelFunctions.TrainTwoLayerPerceptron("nn", "config", _inputs, _targets, _numHidden);
-            trainerMock.Verify(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<NeuralNetworkConfig>()), 
+            trainerMock.Verify(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<INeuralNetwork>()), 
                                Times.Exactly(1));
         }
 
@@ -183,9 +183,9 @@ namespace NNX.Tests.ExcelFuncionsTests
             var trainerMock = new Mock<ITrainer>();
             trainerMock.SetupAllProperties();
             _actualInputs = null;
-            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<NeuralNetworkConfig>()))
-                .Callback((IList<InputOutput> l, NeuralNetworkConfig c) => _actualInputs = l)
-                .Returns((IList<InputOutput> l, NeuralNetworkConfig c) => new TwoLayerPerceptron(1, 1, 1));
+            trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<INeuralNetwork>()))
+                .Callback((IList<InputOutput> l, INeuralNetwork nn) => _actualInputs = l)
+                .Returns((IList<InputOutput> l, INeuralNetwork nn) => nn);
             var trainer = trainerMock.Object;
             TrainerProvider.GetTrainer = () => trainer;
             return trainerMock;

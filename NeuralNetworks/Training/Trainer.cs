@@ -15,7 +15,7 @@ namespace NeuralNetworks.Training
             Config = config;
         }
 
-        public INeuralNetwork Train(IList<InputOutput> trainingSet, NeuralNetworkConfig nnConfig)
+        public INeuralNetwork Train(IList<InputOutput> trainingSet, INeuralNetwork nn)
         {
             if (Config == null)
                 throw new NeuralNetworkException("Trainer is missing Config property.");
@@ -25,13 +25,12 @@ namespace NeuralNetworks.Training
             if (numEpochs <= 0)
                 throw new NeuralNetworkException("Config.NumEpochs property should be a positive integer.  Was: " + Config.NumEpochs);
 
-            if (nnConfig == null)
-                throw new ArgumentNullException(nameof(nnConfig));
+            if (nn == null)
+                throw new ArgumentNullException(nameof(nn));
 
             var rand = RandomProvider.GetRandom(Config.Seed);
-            var nn = NeuralNetworkBuilder.Build(nnConfig);
 
-            if (nnConfig.Weights == null)
+            if (Config.InitializeWeights)
                 InitializeWeights(nn, rand);
 
             var prevWeightGradients = nn.Weights.DeepClone();
@@ -46,15 +45,6 @@ namespace NeuralNetworks.Training
             {
                 var t = rand.Next(trainingSet.Count);
                 var inputOutput = trainingSet[t];
-
-                var inputLength = inputOutput.Input.Length;
-                var targetLength = inputOutput.Output.Length;
-                
-                if (nn.NumInputs != inputLength)
-                    throw new NeuralNetworkException("Training input had " + inputLength + " while neural network expected " + nn.NumInputs);
-
-                if (nn.NumOutputs != targetLength)
-                    throw new NeuralNetworkException("Training input had " + targetLength + " while neural network expected " + nn.NumOutputs);
 
                 var gradients = nn.CalculateGradients(inputOutput.Input, inputOutput.Output);
                 AdjustWeights(nn, gradients, prevWeightGradients);

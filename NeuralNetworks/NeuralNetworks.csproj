@@ -61,11 +61,10 @@
     <Compile Include="INeuralNetwork.cs" />
     <Compile Include="ListExtensions.cs" />
     <Compile Include="InputOutput.cs" />
+    <Compile Include="MultilayerPerceptron.cs" />
     <Compile Include="Utils\IRandomGenerator.cs" />
     <Compile Include="Utils\RandomGenerator.cs" />
     <Compile Include="Utils\RandomProvider.cs" />
-    <Compile Include="NeuralNetworkBuilder.cs" />
-    <Compile Include="NeuralNetworkConfig.cs" />
     <Compile Include="Training\ITrainer.cs" />
     <Compile Include="Training\Trainer.cs" />
     <Compile Include="Training\TrainerConfig.cs" />

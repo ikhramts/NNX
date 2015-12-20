@@ -25,7 +25,5 @@
         /// </summary>
         /// <returns></returns>
         double[][] CalculateGradients(double[] input, double[] targets);
-
-        NeuralNetworkConfig GetConfig();
     }
 }
