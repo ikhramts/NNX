@@ -76,6 +76,7 @@
     <Compile Include="ExcelFuncionsTests\MakeTrainerConfigTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\SampleData.cs" />
+    <Compile Include="ExcelFuncionsTests\TrainMultilayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\TrainTwoLayerPerceptronTests.cs" />
     <Compile Include="ObjectStoreTestBase.cs" />
     <Compile Include="ObjectStoreTests.cs" />

@@ -12,7 +12,7 @@ namespace NNX.Tests.ExcelFuncionsTests
     {
         private readonly object[,] _inputs = { { 1, 2.0 }, { 3, 4.0 } };
         private readonly object[,] _targets = { { 1, 0 }, { 0.0, 1 } };
-        private readonly int[] _hiddenLayerSizes = {2, 3};
+        private readonly double[] _hiddenLayerSizes = {2, 3};
 
         private IList<InputOutput> _actualInputs;
         private readonly string _nnName;
@@ -86,7 +86,8 @@ namespace NNX.Tests.ExcelFuncionsTests
         public void TrainedNetworkShouldHaveCorrectNumHidden()
         {
             var result = ObjectStore.Get<MultilayerPerceptron>("nn");
-            result.HiddenLayerSizes.Should().Equal(_hiddenLayerSizes);
+            var expected = new[] {2, 3};
+            result.HiddenLayerSizes.Should().Equal(expected);
         }
 
         [Fact]

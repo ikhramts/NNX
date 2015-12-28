@@ -78,7 +78,7 @@ namespace NNX
 
         [ExcelFunction(Name = "nnTrainMultilayerPerceptron")]
         public static string TrainMultilayerPerceptron(string neuralNetworkName, string trainerConfigName,
-            object[,] inputs, object[,] targets, int[] hiddenLayerSizes)
+            object[,] inputs, object[,] targets, double[] hiddenLayerSizes)
         {
             var inputTargets = PrepareInputTargetSet(inputs, targets);
 
@@ -87,7 +87,9 @@ namespace NNX
             var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
             var trainer = TrainerProvider.GetTrainer();
             trainer.Config = trainerConfig;
-            var nn = new MultilayerPerceptron(inputWidth, targedWidth, hiddenLayerSizes);
+
+            var intHiddenLayerSizes = hiddenLayerSizes.Select(h => (int) h).ToArray();
+            var nn = new MultilayerPerceptron(inputWidth, targedWidth, intHiddenLayerSizes);
 
             trainer.Train(inputTargets, nn);
 
