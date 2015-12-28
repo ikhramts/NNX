@@ -106,17 +106,13 @@ namespace NNX
         [ExcelFunction(Name = "nnGetWeights")]
         public static double[,] GetWeights(string neuralNetworkName, int layer)
         {
-            var perceptron = ObjectStore.Get<TwoLayerPerceptron>(neuralNetworkName);
+            var perceptron = ObjectStore.Get<INeuralNetwork>(neuralNetworkName);
 
-            if (layer != 1 && layer != 2)
-                throw new NNXException($"Layer number must be 1 or 2; was {layer}.");
+            if (layer > perceptron.Weights.Length || layer <= 0)
+                throw new NNXException($"Layer for neural network {neuralNetworkName} must be between " +
+                                       $"1 and {perceptron.Weights.Length}; was {layer}.");
 
-            double[,] result;
-
-            if (layer == 1)
-                result = perceptron.HiddenWeights.ToVertical2DArray();
-            else
-                result = perceptron.OutputWeights.ToVertical2DArray();
+            var result = perceptron.Weights[layer - 1].ToVertical2DArray();
 
             ResizeOutputToArray(result);
             return result;
