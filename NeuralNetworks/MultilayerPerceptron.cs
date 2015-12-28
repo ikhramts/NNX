@@ -4,6 +4,12 @@ using System.Linq;
 
 namespace NeuralNetworks
 {
+    /// <summary>
+    /// Multilayer perceptron with the following features:
+    /// * Hidden layer activation functions: tahn
+    /// * Output layer activation function: softmax
+    /// * Gradient calculation assumes optimization for min cross-entropy error.
+    /// </summary>
     public class MultilayerPerceptron : INeuralNetwork
     {
         public int NumInputs { get; }
@@ -50,14 +56,14 @@ namespace NeuralNetworks
         /// <summary>
         /// Activation functions: tanh for hidden nodes, softmax for output nodes.
         /// </summary>
-        public FeedForwardResult FeedForward(double[] input)
+        public FeedForwardResult FeedForward(double[] inputs)
         {
-            if (input.Length != NumInputs)
-                throw new NeuralNetworkException($"Expected input length to be {NumInputs} but got {input.Length}.");
+            if (inputs.Length != NumInputs)
+                throw new NeuralNetworkException($"Argument 'inputs' should have width {NumInputs}; was {inputs.Length}.");
 
             // Add bias input node (always = 1).
             var inputsWithBias = new double[NumInputs + 1];
-            Array.Copy(input, inputsWithBias, input.Length);
+            Array.Copy(inputs, inputsWithBias, inputs.Length);
             inputsWithBias[inputsWithBias.Length - 1] = 1;
 
             // Prepare hidden nodes. Include bias node (always = 1) as the last node in each layer.
@@ -130,9 +136,112 @@ namespace NeuralNetworks
             return result;
         }
 
-        public double[][] CalculateGradients(double[] input, double[] targets)
+        /// <summary>
+        /// Calculates gradients of the error function (cross-entropy) with respect to weights.
+        /// </summary>
+        public double[][] CalculateGradients(double[] inputs, double[] targets)
         {
-            throw new NotImplementedException();
+            if (targets.Length != NumOutputs)
+                throw new NeuralNetworkException($"Argument 'targets' should have width {NumOutputs}; was " +
+                                                 $"{targets.Length}.");
+
+            var result = new double[Weights.Length][];
+
+            for (var l = 0; l < Weights.Length; l++)
+                result[l] = new double[Weights[l].Length];
+
+            var feedForwardResults = FeedForward(inputs);
+            var inputWithBiases = feedForwardResults.InputWithBias;
+            var hidden = feedForwardResults.HiddenLayers;
+            var outputs = feedForwardResults.Output;
+
+            // The following is a stackexchange-flavored markdown with TeX formulas.
+            // To read it, copy-paste it into https://stackedit.io/editor, or paste individual TeX formulas
+            // into a LaTeX editor.
+
+            /*
+We'll calculate gradients of error function with respect to weights using the following formulas.
+
+Notation:
+
+* $E$: error function (cross-entropy error of targets relative to outputs).
+* $n$: number of hidden and output layers.
+* $a$: a layer between $0$ (input) and $n$ (output), inclusive.
+* $i_a$: $i$-th node in layer $a$.
+* $o_{i_n}$, $t_{i_n}$: value of $i$-th output node, and its training target value.
+* $h_{i_a}$: value of $i$-th hidden (or input, or output) node in layer $a$ after activation.
+* $\bar{h}_{i_a}$: value of $i$-th node in layer $a$ before activation (so $h_{i_a} = \tanh \bar{h}_{i_a}$) .
+* $w_{i_{a-1}, i_a}$: weight of $i_{a-1}$-th node in layer $a-1$ in activation of $i_a$-th node in layer $a$.
+
+Note that indexes $i_a$ and $i_{a-1}$ may have different values.
+
+We can calculate the gradient of error function with respect to any weight $w_{i_{a-1}, i_a}$ using
+$$
+\frac{\partial E}{\partial w_{i_{a-1},i_a}} = h_{i_{a-1}}\frac{\partial E}{\partial \bar{h}_{i_{a}}}
+$$
+where for layer $n$ (output):
+$$
+\frac{\partial E}{\partial \bar{h}_{i_{n}}} = o_{i_n} - t_{i_n}
+$$
+and for any preceding layer $0 < a < n$: 
+$$
+\frac{\partial E}{\partial \bar{h}_{i_{a}}} = (1-h^2_{i_a})\sum_{j_{a+1}}w_{i_a, j_{a+1}}\frac{\partial E}{\partial \bar{h}_{j_{a+1}}}
+$$
+            */
+
+            var maxPreActivationGrads = Math.Max(HiddenLayerSizes.Max(), NumOutputs);
+            var preActivationGrads = new double[maxPreActivationGrads];
+            var prevLayerPreActivationGrads = new double[maxPreActivationGrads];
+
+            // Base setup: error function gradients w/r/t pre-activation output node values.
+            for (var i = 0; i < NumOutputs; i++)
+                preActivationGrads[i] = outputs[i] - targets[i];
+
+            // Recursive cases: calculate weight gradients and pre-activation hidden node gradients for next layer.
+            var nextLayerSize = NumOutputs;
+            int thisLayerSize;
+
+            for (var layer = HiddenLayerSizes.Count - 1; layer >= 0; layer--)
+            {
+                thisLayerSize = HiddenLayerSizes[layer];
+
+                // Calculate weight gradients.
+                for (var i = 0; i < nextLayerSize; i++)
+                {
+                    var offset = (thisLayerSize + 1) * i;
+                    for (var j = 0; j < thisLayerSize + 1; j++)
+                        result[layer + 1][offset + j] = preActivationGrads[i] * hidden[layer][j];
+                }
+
+                // Calculate next layer pre-activation node gradients.
+                for (var i = 0; i < thisLayerSize; i++)
+                {
+                    var sumOfGrads = 0.0;
+
+                    for (var j = 0; j < nextLayerSize; j++)
+                        sumOfGrads += Weights[layer + 1][j * (thisLayerSize + 1) + i] * preActivationGrads[j];
+
+                    prevLayerPreActivationGrads[i] = (1 - hidden[layer][i] * hidden[layer][i]) * sumOfGrads;
+                }
+
+                var temp = preActivationGrads;
+                preActivationGrads = prevLayerPreActivationGrads;
+                prevLayerPreActivationGrads = temp;
+
+                nextLayerSize = thisLayerSize;
+            }
+
+            // Final case: gradients for weights for first layer.
+            thisLayerSize = NumInputs;
+
+            for (var i = 0; i < nextLayerSize; i++)
+            {
+                var offset = (thisLayerSize + 1) * i;
+                for (var j = 0; j < thisLayerSize + 1; j++)
+                    result[0][offset + j] = preActivationGrads[i] * inputWithBiases[j];
+            }
+
+            return result;
         }
     }
 }

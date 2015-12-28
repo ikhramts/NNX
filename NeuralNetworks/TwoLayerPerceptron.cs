@@ -49,13 +49,13 @@ namespace NeuralNetworks
                 OutputWeights[jk] = random.NextDouble() * 0.2 - 0.1;
         }
 
-        public FeedForwardResult FeedForward(double[] input)
+        public FeedForwardResult FeedForward(double[] inputs)
         {
-            if (input.Length != NumInputs)
-                throw new NeuralNetworkException($"Expected input length to be {NumInputs} but got {input.Length}.");
+            if (inputs.Length != NumInputs)
+                throw new NeuralNetworkException($"Expected input length to be {NumInputs} but got {inputs.Length}.");
 
             var result = new FeedForwardResult();
-            var inputsWithBias = GetInputsWithBias(input);
+            var inputsWithBias = GetInputsWithBias(inputs);
             result.InputWithBias = inputsWithBias;
 
             var hidden = new double[NumHidden + 1];

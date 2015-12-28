@@ -68,6 +68,7 @@
     <Compile Include="Assertions\ListAssertions.cs" />
     <Compile Include="ErrorCalculationsTests.cs" />
     <Compile Include="ListExtensionTests.cs" />
+    <Compile Include="MultilayerPerceptronTests\CalculateGradientsTests.cs" />
     <Compile Include="MultilayerPerceptronTests\DirectConstructorTests.cs" />
     <Compile Include="MultilayerPerceptronTests\FeedForwardTests.cs" />
     <Compile Include="MultilayerPerceptronTests\SampleInputs.cs" />

@@ -57,7 +57,7 @@ namespace NeuralNetworks.Tests.MultilayerPerceptronTests
             var nn = SampleInputs.GetSample1HiddenLayerPerceptron();
             Action action = () => nn.FeedForward(new[] { 0.0 });
             action.ShouldThrow<NeuralNetworkException>()
-                .WithMessage($"*Expected input length to be {nn.NumInputs} but got 1.*");
+                .WithMessage($"*Argument 'inputs' should have width {nn.NumInputs}; was 1.*");
         }
 
 

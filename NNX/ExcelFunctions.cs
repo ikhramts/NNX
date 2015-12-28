@@ -61,53 +61,36 @@ namespace NNX
             if (numHiddenNodes <= 0)
                 throw new NNXException($"Parameter NumHiddenNodes should be positive; was {numHiddenNodes}.");
 
-            var numInputPoints = inputs.GetLength(0);
-            var numTargetPoints = targets.GetLength(0);
+            var inputTargets = PrepareInputTargetSet(inputs, targets);
 
-            if (numInputPoints != numTargetPoints)
-                throw new NNXException(
-                    $"Height of Inputs matrix (was {numInputPoints}) should be equal to height "+
-                    $"of Targets matrix (was {numTargetPoints}).");
-
-            // Prepare input+target set.
-            var numPoints = numTargetPoints;
-
-            var inputTargets = new List<InputOutput>(numPoints);
             var inputWidth = inputs.GetLength(1);
             var targedWidth = targets.GetLength(1);
 
-            for (var i = 0; i < numPoints; i++)
-            {
-                var rawInput = inputs.ExtractRow(i);
-
-                if (!rawInput.All(r => r is double || r is int))
-                    continue;
-
-                var rawTarget = targets.ExtractRow(i);
-
-                if (!rawTarget.All(t => t is double || t is int))
-                    continue;
-
-
-                var inputTarget = new InputOutput
-                {
-                    Input = rawInput.ToDoubles(),
-                    Output = rawTarget.ToDoubles()
-                };
-
-                inputTargets.Add(inputTarget);
-            }
-
-            if (!inputTargets.Any())
-                throw new NNXException("There were no good input/target point pairs.");
-
-            // Let's go!
             var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
             var trainer = TrainerProvider.GetTrainer();
             trainer.Config = trainerConfig;
             var nn = new TwoLayerPerceptron(inputWidth, numHiddenNodes, targedWidth);
             trainer.Train(inputTargets, nn);
             
+            ObjectStore.Add(neuralNetworkName, nn);
+            return neuralNetworkName;
+        }
+
+        [ExcelFunction(Name = "nnTrainMultilayerPerceptron")]
+        public static string TrainMultilayerPerceptron(string neuralNetworkName, string trainerConfigName,
+            object[,] inputs, object[,] targets, int[] hiddenLayerSizes)
+        {
+            var inputTargets = PrepareInputTargetSet(inputs, targets);
+
+            var inputWidth = inputs.GetLength(1);
+            var targedWidth = targets.GetLength(1);
+            var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
+            var trainer = TrainerProvider.GetTrainer();
+            trainer.Config = trainerConfig;
+            var nn = new MultilayerPerceptron(inputWidth, targedWidth, hiddenLayerSizes);
+
+            trainer.Train(inputTargets, nn);
+
             ObjectStore.Add(neuralNetworkName, nn);
             return neuralNetworkName;
         }
@@ -180,5 +163,47 @@ namespace NNX
             }
         }
 
+        private static List<InputOutput> PrepareInputTargetSet(object[,] inputs, object[,] targets)
+        {
+            // Validate inputs.
+            var numInputPoints = inputs.GetLength(0);
+            var numTargetPoints = targets.GetLength(0);
+
+            if (numInputPoints != numTargetPoints)
+                throw new NNXException(
+                    $"Height of Inputs matrix (was {numInputPoints}) should be equal to height " +
+                    $"of Targets matrix (was {numTargetPoints}).");
+
+            var numPoints = inputs.GetLength(0);
+
+            var inputTargets = new List<InputOutput>(numPoints);
+
+            for (var i = 0; i < numPoints; i++)
+            {
+                var rawInput = inputs.ExtractRow(i);
+
+                if (!rawInput.All(r => r is double || r is int))
+                    continue;
+
+                var rawTarget = targets.ExtractRow(i);
+
+                if (!rawTarget.All(t => t is double || t is int))
+                    continue;
+
+
+                var inputTarget = new InputOutput
+                {
+                    Input = rawInput.ToDoubles(),
+                    Output = rawTarget.ToDoubles()
+                };
+
+                inputTargets.Add(inputTarget);
+            }
+
+            if (!inputTargets.Any())
+                throw new NNXException("There were no good input/target point pairs.");
+
+            return inputTargets;
+        }
     }
 }
