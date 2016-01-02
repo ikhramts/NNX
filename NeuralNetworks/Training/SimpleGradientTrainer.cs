@@ -4,33 +4,25 @@ using NeuralNetworks.Utils;
 
 namespace NeuralNetworks.Training
 {
-    public class Trainer : ITrainer
+    public class SimpleGradientTrainer : ITrainer
     {
-        public TrainerConfig Config { get; set; }
-
-        public Trainer() { }
-
-        public Trainer(TrainerConfig config)
-        {
-            Config = config;
-        }
+        public double LearningRate { get; set; }
+        public double Momentum { get; set; }
+        public double QuadraticRegularization { get; set; }
+        public double NumEpochs { get; set; }
+        public int Seed { get; set; }
+        public bool ShouldInitializeWeights { get; set; } = true;
 
         public INeuralNetwork Train(IList<InputOutput> trainingSet, INeuralNetwork nn)
         {
-            if (Config == null)
-                throw new NeuralNetworkException("Trainer is missing Config property.");
-
-            var numEpochs = Config.NumEpochs;
-
-            if (numEpochs <= 0)
-                throw new NeuralNetworkException("Config.NumEpochs property should be a positive integer.  Was: " + Config.NumEpochs);
+            Validate();
 
             if (nn == null)
                 throw new ArgumentNullException(nameof(nn));
 
-            var rand = RandomProvider.GetRandom(Config.Seed);
+            var rand = RandomProvider.GetRandom(Seed);
 
-            if (Config.InitializeWeights)
+            if (ShouldInitializeWeights)
                 InitializeWeights(nn, rand);
 
             var prevWeightGradients = nn.Weights.DeepClone();
@@ -41,7 +33,7 @@ namespace NeuralNetworks.Training
                     gradSet[j] = 0;
             }
 
-            for (var s = 0; s < numEpochs; s++)
+            for (var s = 0; s < NumEpochs; s++)
             {
                 var t = rand.Next(trainingSet.Count);
                 var inputOutput = trainingSet[t];
@@ -94,9 +86,9 @@ namespace NeuralNetworks.Training
                 for (var j = 0; j < gradientSubList.Length; j++)
                 {
                     var prevWeight = weightSubList[j];
-                    var fullGradient = gradientSubList[j] + Config.QuadraticRegularization * prevWeight +
-                                        Config.Momentum * prevWeightGradients[i][j];
-                    weightSubList[j] = prevWeight - Config.LearningRate * fullGradient;
+                    var fullGradient = gradientSubList[j] + QuadraticRegularization * prevWeight +
+                                        Momentum * prevWeightGradients[i][j];
+                    weightSubList[j] = prevWeight - LearningRate * fullGradient;
                 }
             }
         }
@@ -108,8 +100,24 @@ namespace NeuralNetworks.Training
             foreach (var weightsSubList in weights)
             {
                 for (int i = 0; i < weightsSubList.Length; i++)
-                    weightsSubList[i] = rand.NextDouble() * 0.2 - 0.1;
+                    weightsSubList[i] = rand.NextDouble() - 0.5;
             }
+        }
+
+        public void Validate()
+        {
+            if (LearningRate <= 0)
+                throw new NeuralNetworkException($"Property LearningRate must be positive; was {LearningRate}.");
+
+            if (Momentum < 0)
+                throw new NeuralNetworkException($"Property Momentum cannot be negative; was {Momentum}.");
+
+            if (QuadraticRegularization < 0)
+                throw new NeuralNetworkException(
+                    $"Property QuadraticRegularization cannot be negative; was {QuadraticRegularization}.");
+
+            if (NumEpochs <= 0)
+                throw new NeuralNetworkException($"Property NumEpochs must be positive; was {NumEpochs}.");
         }
 
     }

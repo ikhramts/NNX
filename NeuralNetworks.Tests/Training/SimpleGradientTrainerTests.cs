@@ -7,7 +7,7 @@ using Xunit;
 
 namespace NeuralNetworks.Tests.Training
 {
-    public class TrainerTests : IDisposable
+    public class SimpleGradientTrainerTests : IDisposable
     {
         public void Dispose()
         {
@@ -15,27 +15,18 @@ namespace NeuralNetworks.Tests.Training
         }
 
         [Fact]
-        public void ConstructorFromConfig_SetConfig()
-        {
-            var trainerConfig = GetSampleTrainerConfig();
-            var trainer = new Trainer(trainerConfig);
-            Assert.Same(trainerConfig, trainer.Config);
-        }
-
-        [Fact]
         public void Train_IfMissingTrainerConfig_Throw()
         {
             var trainingSet = GetTrainingSet();
             var nn = Mock.Of<INeuralNetwork>();
-            var trainer = new Trainer();
+            var trainer = new SimpleGradientTrainer();
             Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nn));
         }
 
         [Fact]
         public void Train_IfTrainingSetDoesNotMatchNetwork_Throw()
         {
-            var trainerConfig = GetSampleTrainerConfig();
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
             var trainingSet = GetTrainingSet();
             var nn = new TwoLayerPerceptron(3, 1, 1);
             Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, nn));
@@ -46,9 +37,8 @@ namespace NeuralNetworks.Tests.Training
         [InlineData(0)]
         public void Train_IfNumEpochsNotPositive_Throw(int numEpochs)
         {
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.NumEpochs = numEpochs;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.NumEpochs = numEpochs;
             var trainingSet = GetTrainingSet();
             Assert.Throws<NeuralNetworkException>(() => trainer.Train(trainingSet, GetSampleNN()));
         }
@@ -57,9 +47,8 @@ namespace NeuralNetworks.Tests.Training
         public void Train_IfInitializeWeightsIsFalse_DoNotInitializeWeights()
         {
             var randMock = SetupMockRandom();
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.InitializeWeights = false;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.ShouldInitializeWeights = false;
             trainer.Train(GetTrainingSet(), GetMockNeuralNetwork().Object);
 
             randMock.Verify(r => r.NextDouble(), Times.Never);
@@ -69,9 +58,8 @@ namespace NeuralNetworks.Tests.Training
         public void Train_IfInitializeWeightsIsTrue_RandomizeInitialWeights()
         {
             var randMock = SetupMockRandom();
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.InitializeWeights = true;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.ShouldInitializeWeights = true;
             trainer.Train(GetTrainingSet(), GetMockNeuralNetwork().Object);
 
             randMock.Verify(r => r.NextDouble(), Times.AtLeastOnce);
@@ -80,8 +68,7 @@ namespace NeuralNetworks.Tests.Training
         [Fact]
         public void Train_IfMissingNeuralNetwork_Throw()
         {
-            var trainerConfig = GetSampleTrainerConfig();
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
             var trainingSet = GetTrainingSet();
 
             Action action = () => trainer.Train(trainingSet, null);
@@ -94,8 +81,7 @@ namespace NeuralNetworks.Tests.Training
             var mockNeuralNet = GetMockNeuralNetwork();
             var nn = mockNeuralNet.Object;
 
-            var trainerConfig = GetSampleTrainerConfig();
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
             var trainingSet = GetTrainingSet();
 
             trainer.Train(trainingSet, nn);
@@ -122,10 +108,8 @@ namespace NeuralNetworks.Tests.Training
             var mockNeuralNet = GetMockNeuralNetwork();
             var nn = mockNeuralNet.Object;
 
-
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.NumEpochs = 2;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.NumEpochs = 2;
             var trainingSet = GetTrainingSet();
 
             trainer.Train(trainingSet, nn);
@@ -154,18 +138,6 @@ namespace NeuralNetworks.Tests.Training
             };
         }
 
-        public static TrainerConfig GetSampleTrainerConfig()
-        {
-            return new TrainerConfig
-            {
-                LearningRate = 0.5,
-                Momentum = 2,
-                NumEpochs = 1,
-                QuadraticRegularization = 0.1,
-                InitializeWeights = false
-            };
-        }
-
         public INeuralNetwork GetSampleNN()
         {
             var nn = new TwoLayerPerceptron(2, 1, 1);
@@ -175,8 +147,8 @@ namespace NeuralNetworks.Tests.Training
         }
 
         [Theory]
-        [InlineData(1, 0.1)]
-        [InlineData(0, -0.1)]
+        [InlineData(1.0, 0.5)]
+        [InlineData(0, -0.5)]
         [InlineData(0.5, 0)]
         public void InitializeWeights_ShouldInitWeights(double randResult, double expected)
         {
@@ -187,7 +159,7 @@ namespace NeuralNetworks.Tests.Training
             randMock.Setup(r => r.NextDouble()).Returns(randResult);
             var rand = randMock.Object;
 
-            Trainer.InitializeWeights(nn, rand);
+            SimpleGradientTrainer.InitializeWeights(nn, rand);
 
             nn.Weights.Should().NotBeNull();
             nn.Weights.Should().HaveCount(2);
@@ -198,10 +170,9 @@ namespace NeuralNetworks.Tests.Training
         [Fact]
         public void AdjustWeight_ShouldApplyLearningRate()
         {
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.Momentum = 0;
-            trainerConfig.QuadraticRegularization = 0;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.Momentum = 0;
+            trainer.QuadraticRegularization = 0;
 
             var nnMock = GetMockNeuralNetwork();
             var nn = nnMock.Object;
@@ -217,9 +188,8 @@ namespace NeuralNetworks.Tests.Training
         [Fact]
         public void AdjustWeights_ShouldApplyMomentum()
         {
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.QuadraticRegularization = 0;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.QuadraticRegularization = 0;
 
             var nnMock = GetMockNeuralNetwork();
             var nn = nnMock.Object;
@@ -235,9 +205,8 @@ namespace NeuralNetworks.Tests.Training
         [Fact]
         public void AdjustWeights_ShouldApplyQuadraticRegularization()
         {
-            var trainerConfig = GetSampleTrainerConfig();
-            trainerConfig.Momentum = 0;
-            var trainer = new Trainer(trainerConfig);
+            var trainer = GetSampleTrainer();
+            trainer.Momentum = 0;
 
             var nnMock = GetMockNeuralNetwork();
             var nn = nnMock.Object;
@@ -248,6 +217,68 @@ namespace NeuralNetworks.Tests.Training
             actualWeights[0].Should().Equal(0.825, 1.65, 2.475);
             actualWeights[1].Should().HaveCount(1);
             actualWeights[1][0].Should().BeApproximately(0.425, 1e-12);
+        }
+
+        [Fact]
+        public void Validate_IfValid_ShouldDoNothing()
+        {
+            var config = new SimpleGradientTrainer { LearningRate = 0.1, NumEpochs = 100 };
+            config.Validate();
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public void Validate_IfLearningRateNotPositive_Throw(double badLearnignRate)
+        {
+            var trainer = new SimpleGradientTrainer { LearningRate = badLearnignRate, NumEpochs = 100 };
+            Action action = () => trainer.Validate();
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Property LearningRate must be positive; was {badLearnignRate}*");
+        }
+
+        [Fact]
+        public void Validate_IfMomentumNegative_Throw()
+        {
+            const double badMomentum = -0.2;
+            var trainer = new SimpleGradientTrainer { LearningRate = 0.1, NumEpochs = 100, Momentum = badMomentum };
+            Action action = () => trainer.Validate();
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Property Momentum cannot be negative; was {badMomentum}*");
+        }
+
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-2)]
+        public void Validate_IfNumEpochsIsNotPositive_Throw(int badNumEpochs)
+        {
+            var trainer = new SimpleGradientTrainer { LearningRate = 0.1, NumEpochs = badNumEpochs };
+            Action action = () => trainer.Validate();
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Property NumEpochs must be positive; was {badNumEpochs}*");
+        }
+
+        [Fact]
+        public void Validate_IfQuadraticRegularizationNegative_Throw()
+        {
+            const double bad = -0.1;
+            var trainer = new SimpleGradientTrainer { LearningRate = 0.1, NumEpochs = 100, QuadraticRegularization = bad };
+            Action action = () => trainer.Validate();
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Property QuadraticRegularization cannot be negative; was {bad}*");
+        }
+
+        [Fact]
+        public void Train_ShouldValidateBeforeTraining()
+        {
+            const double bad = -0.1;
+            var trainer = new SimpleGradientTrainer { LearningRate = 0.1, NumEpochs = 100, QuadraticRegularization = bad };
+            var mockNeuralNet = GetMockNeuralNetwork();
+            var nn = mockNeuralNet.Object;
+            var trainingSet = GetTrainingSet();
+
+            Action action = () => trainer.Train(trainingSet, nn);
+            action.ShouldThrow<NeuralNetworkException>();
         }
 
         public static Mock<INeuralNetwork> GetMockNeuralNetwork()
@@ -275,6 +306,20 @@ namespace NeuralNetworks.Tests.Training
             mock.Setup(r => r.NextDouble()).Returns(() => 0.5);
             RandomProvider.GetRandom = seed => mock.Object;
             return mock;
+        }
+
+        private static SimpleGradientTrainer GetSampleTrainer()
+        {
+            var trainer = new SimpleGradientTrainer
+            {
+                LearningRate = 0.5,
+                Momentum = 2,
+                NumEpochs = 1,
+                QuadraticRegularization = 0.1,
+                ShouldInitializeWeights = false
+            };
+
+            return trainer;
         }
 
     }

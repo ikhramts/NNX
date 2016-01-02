@@ -10,11 +10,11 @@ namespace NNX
     public static class ExcelFunctions
     {
         //===================== Excel functions =============================
-        [ExcelFunction(Name = "nnMakeTrainerConfig")]
-        public static string MakeTrainerConfig(string name, int numEpochs, double learningRate,
+        [ExcelFunction(Name = "nnMakeSimpleGradientTrainer")]
+        public static string MakeSimpleGradientTrainer(string name, int numEpochs, double learningRate,
             double momentum, double quadraticRegularization, int seed)
         {
-            var config = new TrainerConfig
+            var config = new SimpleGradientTrainer
             {
                 NumEpochs = numEpochs,
                 LearningRate = learningRate,
@@ -53,29 +53,6 @@ namespace NNX
             return name;
         }
 
-        [ExcelFunction(Name = "nnTrainTwoLayerPerceptron")]
-        public static string TrainTwoLayerPerceptron(string neuralNetworkName, string trainerConfigName, 
-            object[,] inputs, object[,] targets, int numHiddenNodes)
-        {
-            // Check inputs.
-            if (numHiddenNodes <= 0)
-                throw new NNXException($"Parameter NumHiddenNodes should be positive; was {numHiddenNodes}.");
-
-            var inputTargets = PrepareInputTargetSet(inputs, targets);
-
-            var inputWidth = inputs.GetLength(1);
-            var targedWidth = targets.GetLength(1);
-
-            var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
-            var trainer = TrainerProvider.GetTrainer();
-            trainer.Config = trainerConfig;
-            var nn = new TwoLayerPerceptron(inputWidth, numHiddenNodes, targedWidth);
-            trainer.Train(inputTargets, nn);
-            
-            ObjectStore.Add(neuralNetworkName, nn);
-            return neuralNetworkName;
-        }
-
         [ExcelFunction(Name = "nnTrainMultilayerPerceptron")]
         public static string TrainMultilayerPerceptron(string neuralNetworkName, string trainerConfigName,
             object[,] inputs, object[,] targets, double[] hiddenLayerSizes)
@@ -84,9 +61,7 @@ namespace NNX
 
             var inputWidth = inputs.GetLength(1);
             var targedWidth = targets.GetLength(1);
-            var trainerConfig = ObjectStore.Get<TrainerConfig>(trainerConfigName).Clone();
-            var trainer = TrainerProvider.GetTrainer();
-            trainer.Config = trainerConfig;
+            var trainer = ObjectStore.Get<ITrainer>(trainerConfigName);
 
             var intHiddenLayerSizes = hiddenLayerSizes.Select(h => (int) h).ToArray();
             var nn = new MultilayerPerceptron(inputWidth, targedWidth, intHiddenLayerSizes);

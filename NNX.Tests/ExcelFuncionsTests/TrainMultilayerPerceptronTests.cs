@@ -20,8 +20,8 @@ namespace NNX.Tests.ExcelFuncionsTests
         public TrainMultilayerPerceptronTests()
         {
             TrainerProvider.GetTrainer = TrainerProvider.GetDefaultTrainer;
-            ExcelFunctions.MakeTrainerConfig("config", 2, 0.1, 0.2, 0.3, 3);
-            _nnName = ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+            ExcelFunctions.MakeSimpleGradientTrainer("trainer", 2, 0.1, 0.2, 0.3, 3);
+            _nnName = ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
         }
 
         public override void Dispose()
@@ -50,7 +50,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         {
             _hiddenLayerSizes[0] = bad;
             Action action = 
-                () => ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+                () => ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
             action.ShouldThrow<NeuralNetworkException>();
         }
 
@@ -59,7 +59,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         {
             var targets = new object[,] { { 0, 1 } };
             Action action = 
-                () => ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, targets, _hiddenLayerSizes);
+                () => ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, targets, _hiddenLayerSizes);
             action.ShouldThrow<NNXException>()
                 .WithMessage(
                     "*Height of Inputs matrix (was 2) should be equal to height of Targets matrix (was 1).*");
@@ -108,7 +108,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         public void ShouldInvokeTrainOnce()
         {
             var trainerMock = SetupInspectingMockTrainer();
-            ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+            ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
             trainerMock.Verify(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<INeuralNetwork>()),
                                Times.Exactly(1));
         }
@@ -118,7 +118,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         {
             SetupInspectingMockTrainer();
 
-            ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+            ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
 
             _actualInputs.Should().NotBeNull();
             _actualInputs.Count.Should().Be(2);
@@ -135,7 +135,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             _inputs[0, 1] = bad;
             SetupInspectingMockTrainer();
 
-            ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+            ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
 
             _actualInputs.Should().NotBeNull();
             _actualInputs.Count.Should().Be(1);
@@ -150,7 +150,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             _targets[1, 1] = bad;
             SetupInspectingMockTrainer();
 
-            ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+            ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
 
             _actualInputs.Should().NotBeNull();
             _actualInputs.Count.Should().Be(1);
@@ -166,7 +166,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             _inputs[0, 1] = bad;
 
             Action action = 
-                () => ExcelFunctions.TrainMultilayerPerceptron("nn", "config", _inputs, _targets, _hiddenLayerSizes);
+                () => ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
             action.ShouldThrow<NNXException>()
                 .WithMessage("*There were no good input/target point pairs.*");
         }
@@ -190,7 +190,7 @@ namespace NNX.Tests.ExcelFuncionsTests
                 .Callback((IList<InputOutput> l, INeuralNetwork nn) => _actualInputs = l)
                 .Returns((IList<InputOutput> l, INeuralNetwork nn) => nn);
             var trainer = trainerMock.Object;
-            TrainerProvider.GetTrainer = () => trainer;
+            ObjectStore.Add("trainer", trainer);
             return trainerMock;
         }
     }

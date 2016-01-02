@@ -72,8 +72,7 @@
     <Compile Include="MultilayerPerceptronTests\DirectConstructorTests.cs" />
     <Compile Include="MultilayerPerceptronTests\FeedForwardTests.cs" />
     <Compile Include="MultilayerPerceptronTests\SampleInputs.cs" />
-    <Compile Include="Training\TrainerConfigTests.cs" />
-    <Compile Include="Training\TrainerTests.cs" />
+    <Compile Include="Training\SimpleGradientTrainerTests.cs" />
     <Compile Include="TwoLayerPerceptronTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
