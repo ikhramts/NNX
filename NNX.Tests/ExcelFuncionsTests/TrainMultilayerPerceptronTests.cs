@@ -19,15 +19,8 @@ namespace NNX.Tests.ExcelFuncionsTests
 
         public TrainMultilayerPerceptronTests()
         {
-            TrainerProvider.GetTrainer = TrainerProvider.GetDefaultTrainer;
             ExcelFunctions.MakeSimpleGradientTrainer("trainer", 2, 0.1, 0.2, 0.3, 3);
             _nnName = ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
-        }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            TrainerProvider.GetTrainer = TrainerProvider.GetDefaultTrainer;
         }
 
         [Fact]

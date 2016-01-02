@@ -67,7 +67,6 @@
     <Compile Include="Utils\RandomProvider.cs" />
     <Compile Include="Training\ITrainer.cs" />
     <Compile Include="Training\SimpleGradientTrainer.cs" />
-    <Compile Include="Training\TrainerProvider.cs" />
     <Compile Include="TwoLayerPerceptron.cs" />
     <Compile Include="NeuralNetworkException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
