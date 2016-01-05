@@ -2,6 +2,9 @@
 
 namespace NeuralNetworks.Utils
 {
+    /// <summary>
+    /// Thin wrapper over System.Random.
+    /// </summary>
     public class RandomGenerator : IRandomGenerator
     {
         private Random _random = new Random();
@@ -18,14 +21,10 @@ namespace NeuralNetworks.Utils
             }
         }
 
-        public double NextDouble()
-        {
-            return _random.NextDouble();
-        }
+        public double NextDouble() => _random.NextDouble();
 
-        public int Next(int maxValue)
-        {
-            return _random.Next(maxValue);
-        }
+        public int Next(int maxValue) => _random.Next(maxValue);
+
+        public int Next(int minValue, int maxValue) => _random.Next(minValue, maxValue);
     }
 }

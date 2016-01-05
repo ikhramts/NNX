@@ -5,7 +5,8 @@ namespace NeuralNetworks.Tests.Assertions
 {
     public static class ListAssertions
     {
-        public static void ShouldApproximatelyEqual(this IList<double> actual, IList<double> expected, double relTolerance)
+        public static void ShouldApproximatelyEqual(this IList<double> actual, 
+            IList<double> expected, double relTolerance = 1e-12)
         {
             if (actual == null)
             {

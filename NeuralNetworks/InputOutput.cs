@@ -1,11 +1,12 @@
 ﻿using System;
+using NeuralNetworks.Utils;
 
 namespace NeuralNetworks
 {
     public class InputOutput
     {
         public double[] Input { get; set; }
-        public double[] Output { get; set; }
+        public double[] Output { get; set;  }
 
         public static InputOutput FromCsvRow(string[] csvCells)
         {
@@ -30,6 +31,27 @@ namespace NeuralNetworks
             }
 
             return inputTarget;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            if (obj.GetType() != GetType()) return false;
+
+            return Equals((InputOutput)obj);
+        }
+
+        protected bool Equals(InputOutput other)
+        {
+            return Input.ListEquals(other.Input) && Output.ListEquals(other.Output);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Input.GetListHashCode() * 397) ^ Output.GetListHashCode();
+            }
         }
     }
 }

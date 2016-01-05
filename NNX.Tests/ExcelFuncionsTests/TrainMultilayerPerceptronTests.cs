@@ -19,7 +19,7 @@ namespace NNX.Tests.ExcelFuncionsTests
 
         public TrainMultilayerPerceptronTests()
         {
-            ExcelFunctions.MakeSimpleGradientTrainer("trainer", 2, 0.1, 0.2, 0.3, 3);
+            ExcelFunctions.MakeSimpleGradientTrainer("trainer", 2, 0.1, 0.2, 0.3, 1, 3);
             _nnName = ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
         }
 
@@ -180,8 +180,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             trainerMock.SetupAllProperties();
             _actualInputs = null;
             trainerMock.Setup(t => t.Train(It.IsAny<IList<InputOutput>>(), It.IsAny<INeuralNetwork>()))
-                .Callback((IList<InputOutput> l, INeuralNetwork nn) => _actualInputs = l)
-                .Returns((IList<InputOutput> l, INeuralNetwork nn) => nn);
+                .Callback((IList<InputOutput> l, INeuralNetwork nn) => _actualInputs = l);
             var trainer = trainerMock.Object;
             ObjectStore.Add("trainer", trainer);
             return trainerMock;

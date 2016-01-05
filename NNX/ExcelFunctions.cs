@@ -12,7 +12,7 @@ namespace NNX
         //===================== Excel functions =============================
         [ExcelFunction(Name = "nnMakeSimpleGradientTrainer")]
         public static string MakeSimpleGradientTrainer(string name, int numEpochs, double learningRate,
-            double momentum, double quadraticRegularization, int seed)
+            double momentum, double quadraticRegularization, int batchSize, int seed)
         {
             var config = new SimpleGradientTrainer
             {
@@ -20,6 +20,7 @@ namespace NNX
                 LearningRate = learningRate,
                 Momentum = momentum,
                 QuadraticRegularization = quadraticRegularization,
+                BatchSize = batchSize,
                 Seed = seed,
             };
 
