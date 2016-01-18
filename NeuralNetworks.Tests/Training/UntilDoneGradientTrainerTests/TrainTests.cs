@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using FluentAssertions;
 using Moq;
+using NeuralNetworks.Tests.Assertions;
 using NeuralNetworks.Tests.TestObjects;
 using NeuralNetworks.Training;
 using Xunit;
@@ -9,20 +10,52 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
 {
     public class TrainTests
     {
-        private double[] _testOutput = {0.99, 0.01};
-        private UntilDoneGradientTrainer _trainer = GetTrainer();
+        private int _stepsOfImprovementRemaning = 10;
+        private readonly UntilDoneGradientTrainer _trainer = GetTrainer();
 
-        [Fact]
-        public void ShouldStopWhenNoImprovement()
+        [Theory]
+        [InlineData(1, 1, 1, 4)]
+        [InlineData(1, 0, 1, 3)]
+        [InlineData(1, 5, 2, 4)]
+        [InlineData(3, 3, 2, 4)]
+        public void ShouldStopWhenNoImprovement(int lastEpochOfImprovement,
+            int maxEpochsWithoutImprovement, 
+            int epochsBetweenValidation, 
+            int expectedEvaluations)
         {
-            _trainer.MaxEpochsWithoutImprovement = 1;
-            _trainer.NumEpochs = 3;
+            _trainer.MaxEpochsWithoutImprovement = maxEpochsWithoutImprovement;
+            _trainer.EpochsBetweenValidations = epochsBetweenValidation;
+            _trainer.NumEpochs = 100;
 
             var mockNeuralNet = GetMockNeuralNetwork();
             var nn = mockNeuralNet.Object;
 
+            _stepsOfImprovementRemaning = lastEpochOfImprovement / epochsBetweenValidation + 1;
+            _trainer.Train(GetTrainingSet(), GetValidationSet(), MockRandom.Get(), nn);
 
+            mockNeuralNet.Verify(n => n.FeedForward(It.IsAny<double[]>()), Times.Exactly(expectedEvaluations));
+        }
 
+        [Fact]
+        public void ShouldReturnBestResultWhenStoppedEarly()
+        {
+            _trainer.MaxEpochsWithoutImprovement = 2;
+            _trainer.NumEpochs = 5;
+
+            var mockNeuralNet = GetMockNeuralNetwork();
+            var nn = mockNeuralNet.Object;
+
+            _stepsOfImprovementRemaning = 2;
+            _trainer.Train(GetTrainingSet(), GetValidationSet(), MockRandom.Get(), nn);
+
+            // Should be same result as training for only 1 epoch.
+            var weights = nn.Weights;
+            var expected = new[] { new[] { 0.825, 1.65, 2.475 }, new[] { 0.425 } };
+
+            for (var i = 0; i < weights.Length; i++)
+            {
+                weights[i].ShouldApproximatelyEqual(expected[i]);
+            }
         }
 
         [Fact]
@@ -42,10 +75,7 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
 
             for (var i = 0; i < weights.Length; i++)
             {
-                weights[i].Should().HaveCount(expected[i].Length);
-
-                for (var j = 0; j < weights[i].Length; j++)
-                    weights[i][j].Should().BeApproximately(expected[i][j], 1e-12);
+                weights[i].ShouldApproximatelyEqual(expected[i]);
             }
         }
 
@@ -56,9 +86,8 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
             var nn = mockNeuralNet.Object;
 
             _trainer.NumEpochs = 2;
-            var trainingSet = GetTrainingSet();
 
-            _trainer.Train(trainingSet, nn);
+            _trainer.Train(GetTrainingSet(), GetValidationSet(), MockRandom.Get(), nn);
 
             nn.Should().NotBeNull();
             var weights = nn.Weights;
@@ -69,10 +98,7 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
 
             for (var i = 0; i < weights.Length; i++)
             {
-                weights[i].Should().HaveCount(expected[i].Length);
-
-                for (var j = 0; j < weights[i].Length; j++)
-                    weights[i][j].Should().BeApproximately(expected[i][j], 1e-12);
+                weights[i].ShouldApproximatelyEqual(expected[i]);
             }
         }
 
@@ -84,7 +110,7 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
             };
         }
 
-        public static Mock<INeuralNetwork> GetMockNeuralNetwork()
+        public Mock<INeuralNetwork> GetMockNeuralNetwork()
         {
             var weights = GetWeights();
             var mock = new Mock<INeuralNetwork>();
@@ -94,6 +120,35 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
             mock.Setup(nn => nn.CalculateGradients(It.IsAny<double[]>(), It.IsAny<double[]>()))
                 .Returns((double[] i, double[] t) => GetGradients());
 
+            // FeedForward() will return increasingly good results for first _stepsOfImprovementRemaning
+            // queries, and and bad result on all subsequent queries.
+            // This will allow us to test stopping conditions.
+            // Note that since this is a mock neural network, FeedForward will be 
+            // not be called by any of neural net's internal functions, only by the trainer.
+            var good = new[] { 0.99, 0.01 };
+            var badResult = new FeedForwardResult { Output = new[] { 0.01, 0.99 } };
+
+            mock.Setup(nn => nn.FeedForward(It.IsAny<double[]>()))
+                .Returns((double[] inputs) =>
+                {
+                    if (_stepsOfImprovementRemaning > 0)
+                    {
+                        var result = new FeedForwardResult()
+                        {
+                            Output = new[]
+                            {
+                                good[0] - ((double) _stepsOfImprovementRemaning) / 100.0,
+                                good[1] + ((double) _stepsOfImprovementRemaning) / 100.0,
+                            }
+                        };
+
+                        _stepsOfImprovementRemaning--;
+                        return result;
+                    }
+
+                    return badResult;
+                });
+
             return mock;
         }
 
@@ -101,25 +156,33 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
         {
             var mock = GetMockNeuralNetwork();
 
-            // FeedForward() will return a good result on first query, and bad result on all
-            // subsequent queries.
+            // FeedForward() will return increasingly good results for first _stepsOfImprovementRemaning
+            // queries, and and bad result on all subsequent queries.
+            // This will allow us to test stopping conditions.
             // Note that since this is a mock neural network, FeedForward will be 
             // not be called by any of neural net's internal functions, only by the trainer.
-
-            var good = new FeedForwardResult {Output = new[] {0.99, 0.01}};
-            var bad = new FeedForwardResult { Output = new[] { 0.01, 0.99 }};
-            var isFirst = true;
+            var good = new[] {0.99, 0.01};
+            var badResult = new FeedForwardResult { Output = new[] { 0.01, 0.99 }};
 
             mock.Setup(nn => nn.FeedForward(It.IsAny<double[]>()))
                 .Returns((double[] inputs) =>
                 {
-                    if (isFirst)
+                    if (_stepsOfImprovementRemaning > 0)
                     {
-                        isFirst = false;
-                        return good;
+                        var result = new FeedForwardResult()
+                        {
+                            Output = new[]
+                            {
+                                good[0] - ((double) _stepsOfImprovementRemaning) / 100.0,
+                                good[1] + ((double) _stepsOfImprovementRemaning) / 100.0,
+                            }
+                        };
+
+                        _stepsOfImprovementRemaning--;
+                        return result;
                     }
 
-                    return bad;
+                    return badResult;
                 });
 
             return mock;
@@ -131,7 +194,7 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
 
         public static IList<InputOutput> GetValidationSet() => new[]
         {
-            new InputOutput {Input = new[] {0.25, 0.5,}, Output = new[] {1.0, 0.0}},
+            new InputOutput {Input = new[] {0.25, 0.5}, Output = new[] {1.0, 0.0}},
         };
 
         private static UntilDoneGradientTrainer GetTrainer()

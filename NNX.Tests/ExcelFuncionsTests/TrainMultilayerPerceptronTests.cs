@@ -19,7 +19,7 @@ namespace NNX.Tests.ExcelFuncionsTests
 
         public TrainMultilayerPerceptronTests()
         {
-            ExcelFunctions.MakeSimpleGradientTrainer("trainer", 2, 0.1, 0.2, 0.3, 1, 3);
+            ExcelFunctions.MakeSimpleGradientTrainer("trainer", 2, 0.1, 0.2, 0.3, 1, 0, 3);
             _nnName = ExcelFunctions.TrainMultilayerPerceptron("nn", "trainer", _inputs, _targets, _hiddenLayerSizes);
         }
 

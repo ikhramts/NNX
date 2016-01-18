@@ -59,7 +59,7 @@ namespace NeuralNetworks.Tests.Training.BaseTrainerTests
         [Fact]
         public void IfValidationSetFractionNotZero_ShouldMakeValidationSet()
         {
-            _mockTrainer.Protected().Setup<double>("GetValidationSetFraction").Returns(0.25);
+            _mockTrainer.Setup(t => t.GetValidationSetFraction()).Returns(0.25);
             _mockTrainer.Object.Train(_trainingSet, _nn);
             _trainingSubSet.Should().HaveCount(3);
             _validationSubSet.Should().HaveCount(1);
@@ -115,7 +115,7 @@ namespace NeuralNetworks.Tests.Training.BaseTrainerTests
                     _trainedNeuralNet = nn;
                 });
             mock.Setup(t => t.Validate());
-            mock.Protected().Setup<double>("GetValidationSetFraction").Returns(0);
+            mock.Setup(t => t.GetValidationSetFraction()).Returns(0);
 
             return mock;
         }

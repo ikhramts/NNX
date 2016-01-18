@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 
 namespace NNX
 {
@@ -32,6 +33,22 @@ namespace NNX
 
             throw new NNXException($"Object '{name}' was expected to be {expectedType}" +
                 $" but was {actualType}.");
+        }
+
+        public static bool TryGet<T>(string name, out T value)
+        {
+            object obj;
+
+            if (string.IsNullOrEmpty(name) 
+                || !Objects.TryGetValue(name, out obj) 
+                || !(obj is T))
+            {
+                value = default(T);
+                return false;
+            }
+
+            value = (T) obj;
+            return true;
         }
 
         public static void Clear()

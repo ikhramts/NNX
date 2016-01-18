@@ -89,7 +89,19 @@ namespace NeuralNetworks.Tests.Training.UntilDoneGradientTrainerTests
             _trainer.MaxEpochsWithoutImprovement = bad;
             Action action = () => _trainer.Validate();
             action.ShouldThrow<NeuralNetworkException>()
-                .WithMessage($"*Property MaxEpochsWithoutImprovement must be positive; was {bad}*");
+                .WithMessage($"*Property MaxEpochsWithoutImprovement must not be negative; was {bad}*");
+
+        }
+
+        [Theory]
+        [InlineData(-2)]
+        [InlineData(0)]
+        public void IfEpochsBetweenValidationsNotPositive_Throw(int bad)
+        {
+            _trainer.EpochsBetweenValidations = bad;
+            Action action = () => _trainer.Validate();
+            action.ShouldThrow<NeuralNetworkException>()
+                .WithMessage($"*Property EpochsBetweenValidations must be positive; was {bad}*");
 
         }
     }

@@ -39,7 +39,7 @@ namespace NeuralNetworks.Training
                 throw new NeuralNetworkException($"Parameter {nameof(BatchSize)} must be positive; was {BatchSize}.");
         }
 
-        protected override double GetValidationSetFraction()
+        public override double GetValidationSetFraction()
         {
             return 0;
         }

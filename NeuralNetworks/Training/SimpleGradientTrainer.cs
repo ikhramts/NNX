@@ -15,6 +15,7 @@ namespace NeuralNetworks.Training
         public double QuadraticRegularization { get; set; }
         public double NumEpochs { get; set; }
         public int BatchSize { get; set; } = 1;
+        public double MaxRelativeNoise { get; set; }
 
         public override void Train(IList<InputOutput> trainingSet,
             IList<InputOutput> validationSet,
@@ -40,7 +41,8 @@ namespace NeuralNetworks.Training
 
                 for (var j = 0; j < BatchSize; j++)
                 {
-                    gradients.AddInPlace(nn.CalculateGradients(batch[j].Input, batch[j].Output));
+                    gradients.AddInPlace(
+                        nn.CalculateGradients(batch[j].Input.AddRelativeNoise(MaxRelativeNoise, rand), batch[j].Output));
                 }
 
                 gradients.MultiplyInPlace(1 / ((double)BatchSize));
@@ -51,7 +53,7 @@ namespace NeuralNetworks.Training
             }
         }
 
-        protected override double GetValidationSetFraction() => 0;
+        public override double GetValidationSetFraction() => 0;
 
         public void AdjustWeights(INeuralNetwork nn, double[][] weightGradients, double[][] prevWeightGradients)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
 using NeuralNetworks.Tests.Assertions;
+using NeuralNetworks.Tests.TestObjects;
 using NeuralNetworks.Utils;
 using Xunit;
 
@@ -204,5 +205,22 @@ namespace NeuralNetworks.Tests.Utils
                 .WithMessage("*Argument 'multiplier' cannot be NaN.*")
                 .Where(e => e.ParamName == "multiplier");
         }
+
+        [Theory]
+        [InlineData(0, 0.5, -0.5)]
+        [InlineData(0.5, 1.0, 0.0)]
+        [InlineData(0.75, 0, 0.0)]
+        [InlineData(0.1, 2, -1.6)]
+        public void AddNoise_ShouldAddNoise(double randomValue, double maxNoise, double expectedOffset)
+        {
+            var rand = MockRandom.Get(randomValue);
+            var input = new[] {0.0, 0.2};
+
+            var expected = new[] { 0, 0.2 * (1 + expectedOffset) };
+            var result = input.AddRelativeNoise(maxNoise, rand);
+
+            result.ShouldApproximatelyEqual(expected);
+        }
+
     }
 }

@@ -22,17 +22,17 @@ namespace NeuralNetworks.Tests.TestObjects
             RandomProvider.GetRandom = RandomProvider.GetDefaultRandom;
         }
 
-        public static IRandomGenerator Get()
+        public static IRandomGenerator Get(double value = DoubleValue)
         {
-            return GetMock().Object;
+            return GetMock(value).Object;
         }
 
-        public static Mock<IRandomGenerator> GetMock()
+        public static Mock<IRandomGenerator> GetMock(double value = DoubleValue)
         {
             var mock = new Mock<IRandomGenerator>();
             mock.SetupAllProperties();
             mock.Setup(r => r.Next(It.IsAny<int>())).Returns((int i) => IntValue);
-            mock.Setup(r => r.NextDouble()).Returns(() => DoubleValue);
+            mock.Setup(r => r.NextDouble()).Returns(() => value);
             mock.Setup(r => r.Next(It.IsAny<int>(), It.IsAny<int>())).Returns((int min, int max) => min);
             return mock;
         }

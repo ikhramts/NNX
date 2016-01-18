@@ -157,5 +157,18 @@ namespace NeuralNetworks.Utils
                 for (var j = 0; j < subarray.Length; j++)
                     subarray[j] *= multiplier;
         }
+
+        public static double[] AddRelativeNoise(this double[] array, double maxNoise, IRandomGenerator rand)
+        {
+            if (maxNoise == 0)
+                return array;
+
+            var result = new double[array.Length];
+
+            for (var i = 0; i < array.Length; i++)
+                result[i] = array[i] *(1 +  ((rand.NextDouble() * 2) - 1) * maxNoise);
+
+            return result;
+        }
     }
 }

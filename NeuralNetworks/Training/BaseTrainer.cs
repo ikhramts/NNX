@@ -14,7 +14,7 @@ namespace NeuralNetworks.Training
 
         public abstract void Validate();
 
-        protected abstract double GetValidationSetFraction();
+        public abstract double GetValidationSetFraction();
 
         //========================= Main Interface =========================
         public int Seed { get; set; }
@@ -99,7 +99,7 @@ namespace NeuralNetworks.Training
                 batch[i] = set[rand.Next(set.Count)];
 
             return batch;
-        } 
+        }
 
         //========================= Private helpers =========================
 

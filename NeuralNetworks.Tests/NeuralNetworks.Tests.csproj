@@ -72,6 +72,7 @@
     <Compile Include="Training\BaseTrainerTests\TrainTests.cs" />
     <Compile Include="Training\ParticleSwarmTrainerTests\TrainTests.cs" />
     <Compile Include="Training\ParticleSwarmTrainerTests\ValidateTests.cs" />
+    <Compile Include="Training\UntilDoneGradientTrainerTests\GetValidationSetFractionTests.cs" />
     <Compile Include="Training\UntilDoneGradientTrainerTests\TrainTests.cs" />
     <Compile Include="Utils\ListExtensionTests.cs" />
     <Compile Include="MultilayerPerceptronTests\CalculateGradientsTests.cs" />
