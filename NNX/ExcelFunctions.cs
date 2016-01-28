@@ -351,30 +351,6 @@ namespace NNX
             return name;
         }
 
-        [ExcelFunction(Name = "nnMakeTwoLayerPerceptron")]
-        public static string MakeTwoLayerPerceptron(string name, int numHiddenNodes, 
-            double[] hiddenWeights, double[] outputWeights)
-        {
-            var numInputs = (hiddenWeights.Length / numHiddenNodes) - 1;
-            var numOutputs = outputWeights.Length / (numHiddenNodes + 1);
-
-            if ((numInputs + 1) * numHiddenNodes != hiddenWeights.Length)
-                throw new NNXException($"Number of hidden nodes ({numHiddenNodes}) is not consistent " +
-                                        $"with number of input-to-hidden weights ({hiddenWeights.Length}).");
-
-            if (numOutputs * (numHiddenNodes + 1) != outputWeights.Length)
-                throw new NNXException($"Number of hidden nodes ({numHiddenNodes}) is not consistent " +
-                                        $"with number of hidden-to-output weights ({outputWeights.Length}).");
-
-            var nn = new TwoLayerPerceptron(numInputs, numHiddenNodes, numOutputs);
-            Array.Copy(hiddenWeights, nn.HiddenWeights, hiddenWeights.Length);
-            Array.Copy(outputWeights, nn.OutputWeights, outputWeights.Length);
-
-            ObjectStore.Add(name, nn);
-
-            return name;
-        }
-
         [ExcelFunction(Name = "nnMakeMultilayerPerceptron")]
         public static string MakeMultilayerPerceptron(string name, int numInputs, int numOutputs,
             double[] hiddenLayerSizes, string weights)

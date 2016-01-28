@@ -80,9 +80,7 @@
     <Compile Include="ExcelFuncionsTests\MakeMultilayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeObjectTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeSimpleGradientTrainerTests.cs" />
-    <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeWeightsTests.cs" />
-    <Compile Include="ExcelFuncionsTests\SampleData.cs" />
     <Compile Include="ExcelFuncionsTests\TrainMultilayerPerceptronTests.cs" />
     <Compile Include="ObjectStoreTestBase.cs" />
     <Compile Include="ObjectStoreTests.cs" />
