@@ -5,6 +5,7 @@ using System.Reflection;
 using ExcelDna.Integration;
 using NeuralNetworks;
 using NeuralNetworks.Training;
+using NeuralNetworks.Utils;
 
 namespace NNX
 {
@@ -31,17 +32,34 @@ namespace NNX
             const string badTypeMessage = "Array elements must be either numbers or strings. Element" +
                                           " at position {0} was neither number nor string.";
 
-            if (values[0] is double)
+            // Determine the type of the array. To do that,
+            // find the first element that is neither null nor empty.
+            var firstNonEmptyIndex = 0;
+
+            while (firstNonEmptyIndex < values.Length
+                   && (values[firstNonEmptyIndex] == null
+                       || values[firstNonEmptyIndex] == ExcelEmpty.Value))
+                firstNonEmptyIndex++;
+
+            if (firstNonEmptyIndex >= values.Length)
+                throw new NNXException("Array cannot be empty.");
+
+            var firstNonEmpty = values[firstNonEmptyIndex];
+
+            if (firstNonEmpty is double)
             {
-                var array = new double[values.Length];
+                var goodValues = new List<double>(values.Length - firstNonEmptyIndex);
 
                 for (var i = 0; i < values.Length; i++)
                 {
                     var value = values[i];
 
+                    if (value == null || value == ExcelEmpty.Value)
+                        continue;
+
                     if (value is double)
                     {
-                        array[i] = (double) value;
+                        goodValues.Add((double) value);
                         continue;
                     }
 
@@ -51,19 +69,22 @@ namespace NNX
                     throw new NNXException(string.Format(badTypeMessage, i));
                 }
 
-                result = array;
+                result = goodValues.ToArray();
             }
-            else if (values[0] is string)
+            else if (firstNonEmpty is string)
             {
-                var array = new string[values.Length];
+                var goodValues = new List<string>(values.Length - firstNonEmptyIndex);
 
                 for (var i = 0; i < values.Length; i++)
                 {
                     var value = values[i];
 
+                    if (value == null || value == ExcelEmpty.Value)
+                        continue;
+
                     if (value is string)
                     {
-                        array[i] = (string)value;
+                        goodValues.Add((string)value);
                         continue;
                     }
 
@@ -73,7 +94,7 @@ namespace NNX
                     throw new NNXException(string.Format(badTypeMessage, i));
                 }
 
-                result = array;
+                result = goodValues.ToArray();
             }
             else
             {
@@ -85,16 +106,18 @@ namespace NNX
         }
 
         [ExcelFunction(Name = "nnMakeWeights")]
-        public static string MakeWeights(string name, string[] weightArrays)
+        public static string MakeWeights(string name, object[] weightArrays)
         {
             if (weightArrays == null || weightArrays.Length == 0)
                 throw new NNXException("Argument WeightArrays cannot be null or empty.");
 
-            var results = new double[weightArrays.Length][];
+            var weightArrayNames = weightArrays.Select(o => o.ToString()).ToArray();
 
-            for (var i = 0; i < weightArrays.Length; i++)
+            var results = new double[weightArrayNames.Length][];
+
+            for (var i = 0; i < weightArrayNames.Length; i++)
             {
-                var arrayName = weightArrays[i];
+                var arrayName = weightArrayNames[i];
 
                 double[] array;
 
@@ -349,6 +372,34 @@ namespace NNX
 
             ObjectStore.Add(name, nn);
 
+            return name;
+        }
+
+        [ExcelFunction(Name = "nnMakeMultilayerPerceptron")]
+        public static string MakeMultilayerPerceptron(string name, int numInputs, int numOutputs,
+            double[] hiddenLayerSizes, string weights)
+        {
+            var nn = new MultilayerPerceptron(numInputs, numOutputs, hiddenLayerSizes.ToIntArray());
+
+            double[][] weightValues;
+            
+            if (!ObjectStore.TryGet(weights, out weightValues))
+                throw new NNXException("Argument Weights should be a weights object created using nnMakeWeights().");
+
+            if (weightValues.Length != nn.Weights.Length)
+                throw new NNXException($"Argument Weights was expected to have {nn.Weights.Length} " +
+                                       $"layers; had: {weightValues.Length}.");
+
+            for (var layer = 0; layer < weightValues.Length; layer++)
+            {
+                if (weightValues[layer].Length != nn.Weights[layer].Length)
+                    throw new NNXException($"Argument Weights was expected to have {nn.Weights[layer].Length} " +
+                                           $"values in layer {layer + 1}; had: {weightValues[layer].Length}.");
+            }
+
+            weightValues.DeepCopyTo(nn.Weights);
+
+            ObjectStore.Add(name, nn);
             return name;
         }
 

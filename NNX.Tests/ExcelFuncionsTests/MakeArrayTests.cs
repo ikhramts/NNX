@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using ExcelDna.Integration;
 using FluentAssertions;
 using Xunit;
 
@@ -44,13 +46,23 @@ namespace NNX.Tests.ExcelFuncionsTests
                              "Encountered both in this array.*");
         }
 
-        [Fact]
-        public void WhenGivenEmptyArray_Throw()
+        [Theory]
+        [MemberData("WhenGivenEmptyArray_Throw_Cases")]
+        public void WhenGivenEmptyArray_Throw(object[] emtpyArray)
         {
-            var array = new object[0];
-            Action action = () => ExcelFunctions.MakeArray(Name, array);
+            Action action = () => ExcelFunctions.MakeArray(Name, emtpyArray);
             action.ShouldThrow<NNXException>()
                 .WithMessage("*Array cannot be empty.*");
+        }
+
+        public static IEnumerable<object[]> WhenGivenEmptyArray_Throw_Cases()
+        {
+            return new[]
+            {
+                new object[] {new object[0]},
+                new object[] {new object[] {null, null}},
+                new object[] {new object[] {ExcelEmpty.Value, null}},
+            };
         }
 
         [Theory]
@@ -78,5 +90,50 @@ namespace NNX.Tests.ExcelFuncionsTests
             var name = ExcelFunctions.MakeArray(Name, array);
             name.Should().Be(Name);
         }
+
+        [Theory]
+        [MemberData("IfCellIsEmpty_ShouldSkipCell_Cases")]
+        public void IfCellIsEmpty_ShouldSkipCell(object empty)
+        {
+            var array = new[] { 1.0, empty, 1.2 };
+            var expected = new[] { 1.0, 1.2 };
+            ExcelFunctions.MakeArray(Name, array);
+            var result = ObjectStore.Get<double[]>(Name);
+            result.Should().Equal(expected);
+        }
+
+        [Theory]
+        [MemberData("IfCellIsEmpty_ShouldSkipCell_Cases")]
+        public void IfFirstCellIsEmpty_ShouldSkipCell_Numbers(object empty)
+        {
+            var array = new[] { empty, 1.0, 1.2 };
+            var expected = new[] { 1.0, 1.2 };
+            ExcelFunctions.MakeArray(Name, array);
+            var result = ObjectStore.Get<double[]>(Name);
+            result.Should().Equal(expected);
+        }
+
+        [Theory]
+        [MemberData("IfCellIsEmpty_ShouldSkipCell_Cases")]
+        public void IfFirstCellIsEmpty_ShouldSkipCell_Strings(object empty)
+        {
+            var array = new[] { empty, "one", "two" };
+            var expected = new[] { "one", "two" };
+            ExcelFunctions.MakeArray(Name, array);
+            var result = ObjectStore.Get<string[]>(Name);
+            result.Should().Equal(expected);
+        }
+
+        public static IEnumerable<object[]> IfCellIsEmpty_ShouldSkipCell_Cases()
+        {
+            return new[]
+            {
+                new object[] {null},
+                new object[] {ExcelEmpty.Value},
+            };
+        }
+
+
+
     }
 }

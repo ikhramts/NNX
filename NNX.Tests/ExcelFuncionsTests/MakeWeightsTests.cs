@@ -15,7 +15,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             var array2 = new[] {2.1, 2.2, 2.3};
             ExcelFunctions.MakeArray("array1", array1.Cast<object>().ToArray());
             ExcelFunctions.MakeArray("array2", array2.Cast<object>().ToArray());
-            ExcelFunctions.MakeWeights("weights", new[] {"array1", "array2"});
+            ExcelFunctions.MakeWeights("weights", new object[] {"array1", "array2"});
 
             var result = ObjectStore.Get<double[][]>("weights");
             result.Should().HaveCount(2);
@@ -30,7 +30,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             var array2 = new[] { 2.1, 2.2, 2.3 };
             ExcelFunctions.MakeArray("array1", array1.Cast<object>().ToArray());
             ExcelFunctions.MakeArray("array2", array2.Cast<object>().ToArray());
-            var name = ExcelFunctions.MakeWeights("weights", new[] { "array1", "array2" });
+            var name = ExcelFunctions.MakeWeights("weights", new object[] { "array1", "array2" });
             name.Should().Be("weights");
         }
 
@@ -57,7 +57,7 @@ namespace NNX.Tests.ExcelFuncionsTests
         {
             var array1 = new[] { 1.1, 1.2 };
             ExcelFunctions.MakeArray("array1", array1.Cast<object>().ToArray());
-            Action action = () => ExcelFunctions.MakeWeights("weights", new [] {"array1", "array2"});
+            Action action = () => ExcelFunctions.MakeWeights("weights", new object[] {"array1", "array2"});
             action.ShouldThrow<NNXException>()
                 .WithMessage("*Element at index 2 ('array2') does not point to a valid array of numbers.*");
         }
@@ -69,7 +69,7 @@ namespace NNX.Tests.ExcelFuncionsTests
             var array1 = new[] { 1.1, 1.2 };
             ExcelFunctions.MakeArray("array1", array1.Cast<object>().ToArray());
             ObjectStore.Add("bad", bad);
-            Action action = () => ExcelFunctions.MakeWeights("weights", new[] { "array1", "bad" });
+            Action action = () => ExcelFunctions.MakeWeights("weights", new object[] { "array1", "bad" });
             action.ShouldThrow<NNXException>()
                 .WithMessage("*Element at index 2 ('bad') does not point to a valid array of numbers.*");
         }
@@ -82,6 +82,5 @@ namespace NNX.Tests.ExcelFuncionsTests
                 new object[] {new object()},
             };
         }
-
     }
 }

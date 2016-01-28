@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ExcelDna.Integration">
+      <HintPath>..\packages\ExcelDna.Integration.0.33.9\lib\ExcelDna.Integration.dll</HintPath>
+    </Reference>
     <Reference Include="FluentAssertions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=33f2691a05b67b6a, processorArchitecture=MSIL">
       <HintPath>..\packages\FluentAssertions.4.1.0\lib\net45\FluentAssertions.dll</HintPath>
       <Private>True</Private>
@@ -74,6 +77,7 @@
     <Compile Include="ExcelFuncionsTests\GetMeanSquareErrorTests.cs" />
     <Compile Include="ExcelFuncionsTests\GetWeightsTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeArrayTests.cs" />
+    <Compile Include="ExcelFuncionsTests\MakeMultilayerPerceptronTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeObjectTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeSimpleGradientTrainerTests.cs" />
     <Compile Include="ExcelFuncionsTests\MakeTwoLayerPerceptronTests.cs" />

@@ -170,5 +170,15 @@ namespace NeuralNetworks.Utils
 
             return result;
         }
+
+        public static int[] ToIntArray(this double[] array)
+        {
+            var result = new int[array.Length];
+
+            for (var i = 0; i < array.Length; i++)
+                result[i] = (int) array[i];
+
+            return result;
+        }
     }
 }
