@@ -133,7 +133,7 @@ namespace NNX
             return name;
         }
 
-        [ExcelFunction(Name = "nnMakeObject")]
+        //[ExcelFunction(Name = "nnMakeObject")]
         public static string MakeObject(string name, string typeName, object[,] properties)
         {
             if (string.IsNullOrEmpty(typeName))
@@ -305,8 +305,7 @@ namespace NNX
 
         [ExcelFunction(Name = "nnMakeSimpleGradientTrainer")]
         public static string MakeSimpleGradientTrainer(string name, int numEpochs, double learningRate,
-            double momentum, double quadraticRegularization, int batchSize, double maxRelativeNoise,
-            int seed)
+            double momentum, double quadraticRegularization, int batchSize, int seed)
         {
             var config = new SimpleGradientTrainer
             {
@@ -315,7 +314,6 @@ namespace NNX
                 Momentum = momentum,
                 QuadraticRegularization = quadraticRegularization,
                 BatchSize = batchSize,
-                MaxRelativeNoise = maxRelativeNoise,
                 Seed = seed,
             };
 
