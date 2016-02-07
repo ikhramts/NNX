@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <String Id="LANG">1033</String>
+  <String Id="ProductName">NNX</String>
+  <String Id="ProductNameNoSpace">NNX</String>
+  <String Id="ProductDescription">NNX add-in for Excel</String>
+  <String Id="ProductManufacturer">Iouri Khramtsov</String>
+  <String Id="ProductVersion">0.1</String>
+  <String Id="ProductCopyright">(c) 2016 Iouri Khramtsov</String>
+  <String Id="ProductUninstallDescription">Uninstall !(loc.ProductName)</String>
+  <String Id="AppName">!(loc.ProductName)</String>
+</WixLocalization>
