@@ -18,7 +18,7 @@
              Comments="!(loc.ProductCopyright)"/>
     
     <MediaTemplate EmbedCab="yes" />
-    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed." AllowSameVersionUpgrades="yes" />
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of NNX is already installed." AllowSameVersionUpgrades="yes" />
 
     <WixVariable Id="WixUIBannerBmp" Value="Resources\Banner.jpg" />
     <WixVariable Id="WixUIDialogBmp" Value="Resources\Dialog.png" />
@@ -46,8 +46,8 @@
       <ComponentGroupRef Id="XLLDistributables"/>
     </Feature>
 
-    <PropertyRef Id="NETFRAMEWORK40CLIENT" />
-    <Condition Message="[ProductName] requires .NET Framework 4.0.">Installed OR NETFRAMEWORK40CLIENT</Condition>
+    <PropertyRef Id="NETFRAMEWORK46CLIENT" />
+    <Condition Message="NNX requires .NET Framework 4.6. Please install the .NET Framework 4.6 then run this installer again.">Installed OR NETFRAMEWORK46CLIENT</Condition>
     <UI Id="UI">
        <!--See http://wix.sourceforge.net/manual-wix3/WixUI_index.htm for more information
        The following line adds the minimal WiX Dialog set to the install--> 
