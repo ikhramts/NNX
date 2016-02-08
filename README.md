@@ -3,10 +3,10 @@ Main website: [nnx-addin.org](https://nnx-addin.org).
 
 NNX is a collection of custom functions for Excel for working with simple neural networks. For now, version 0.1 has limited support for defining, training and using multilayer perceptrons, as well as a few utility functions.
 
-# Using NNX
+## Using NNX
 Download and install NNX add-in from the main webstie: [nnx-addin.org](https://nnx-addin.org).
 
-# Building
+## Building
 
 Prerequisites:
 * [Visual Studio 2015](https://www.visualstudio.com/) Community Edition or above. 
