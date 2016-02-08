@@ -18,6 +18,5 @@ namespace NeuralNetworks.Training
         /// </summary>
         void Train(IList<InputOutput> trainingSet, IList<InputOutput> validationSet,
             IRandomGenerator rand, INeuralNetwork nn);
-
     }
 }
