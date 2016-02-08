@@ -46,8 +46,8 @@
       <ComponentGroupRef Id="XLLDistributables"/>
     </Feature>
 
-    <PropertyRef Id="NETFRAMEWORK46CLIENT" />
-    <Condition Message="NNX requires .NET Framework 4.6. Please install the .NET Framework 4.6 then run this installer again.">Installed OR NETFRAMEWORK46CLIENT</Condition>
+    <PropertyRef Id="WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED" />
+    <Condition Message="NNX requires .NET Framework 4.6 or later. Please install the .NET Framework 4.6 then run this installer again.">Installed OR WIX_IS_NETFRAMEWORK_46_OR_LATER_INSTALLED</Condition>
     <UI Id="UI">
        <!--See http://wix.sourceforge.net/manual-wix3/WixUI_index.htm for more information
        The following line adds the minimal WiX Dialog set to the install--> 
