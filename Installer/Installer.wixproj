@@ -61,8 +61,9 @@
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />
   <PropertyGroup>
-    <PreBuildEvent>xcopy $(SolutionDir)NNX\bin\$(ConfigurationName)\NNX-AddIn-packed.xll $(ProjectDir) /Y
-xcopy $(SolutionDir)NNX\bin\$(ConfigurationName)\NNX-AddIn64-packed.xll $(ProjectDir) /Y</PreBuildEvent>
+    <PreBuildEvent>xcopy $(SolutionDir)NNX.AddIn\bin\$(ConfigurationName)\NNX-AddIn-packed.xll $(ProjectDir) /Y
+xcopy $(SolutionDir)NNX.AddIn\bin\$(ConfigurationName)\NNX-AddIn64-packed.xll $(ProjectDir) /Y
+xcopy $(SolutionDir)NNX.AddIn\bin\$(ConfigurationName)\NNX.Core.dll $(ProjectDir) /Y</PreBuildEvent>
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

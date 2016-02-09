@@ -108,14 +108,14 @@
     -->
     <ComponentGroup Id="XLLDistributables">
       <Component Id="XLL32" Guid="6B6D7425-4DD1-4D65-877E-49CFAC43977F" Directory="AddinFolder">
-        <RegistryValue Root="HKCU" Key="Software\!(loc.ProductManufacturer)\Excel Add-In" Name="Xll32Bit" Value="AddIns" KeyPath="yes" Type="string" />
+        <RegistryValue Root="HKCU" Key="Software\!(loc.ProductManufacturer)\NNX" Name="Xll32Bit" Value="AddIns" KeyPath="yes" Type="string" />
 
         <File Id="EXCELXLL32PACKED.XLL" Name="NNX-AddIn-packed.xll" Source="NNX-AddIn-packed.xll" >
           <netfx:NativeImage Id="ngen_32Xll" Platform="32bit" Priority="0"/>
         </File>
       </Component>
       <Component Id="XLL64" Guid="4A9F37CE-B54F-47C6-8F59-693AFE330A3E" Directory="AddinFolder">
-        <RegistryValue Root="HKCU" Key="Software\!(loc.ProductManufacturer)\Excel Add-In" Name="Xll64Bit" Value="AddIns" KeyPath="yes" Type="string" />
+        <RegistryValue Root="HKCU" Key="Software\!(loc.ProductManufacturer)\NNX" Name="Xll64Bit" Value="AddIns" KeyPath="yes" Type="string" />
 
         <File Id="EXCELXLL64PACKED.XLL" Name="NNX-AddIn64-packed.xll" Source="NNX-AddIn64-packed.xll" >
           <netfx:NativeImage Id="ngen_64Xll" Platform="64bit" Priority="0"/>
@@ -123,6 +123,10 @@
         <RemoveFile On="uninstall" Id="XLL32" Directory="AddinFolder" Name="!(loc.ProductNameNoSpace)32.xll" />
         <RemoveFile On="uninstall" Id="XLL64" Directory="AddinFolder" Name="!(loc.ProductNameNoSpace)64.xll" />
         <RemoveFolder Id="AddinFolderRemove" Directory="AddinFolder" On="uninstall" />
+      </Component>
+      <Component Id="NNXCore" Guid="0BBC6D8D-0257-4E79-B67B-2D48B7B7058B"  Directory="AddinFolder" >
+        <RegistryValue Root="HKCU" Key="Software\!(loc.ProductManufacturer)\NNX" Name="NNXCore" Value="AddIns" KeyPath="yes" Type="string" />
+        <File Id="NNX.Core.dll" Name="NNX.Core.dll" Source="NNX.Core.dll"/>
       </Component>
     </ComponentGroup>
   </Fragment>
