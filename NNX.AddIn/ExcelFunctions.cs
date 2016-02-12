@@ -21,7 +21,9 @@ namespace NNX.AddIn
         //===================== Excel functions =============================
 
         [ExcelFunction(Name= "nnMakeArray")]
-        public static string MakeArray(string name, object[] values)
+        public static string MakeArray(
+            [ExcelArgument(Description = "Name of the array object to create.")] string name,
+            [ExcelArgument(Description = "Array of values.")] object[] values)
         {
             if (values == null || values.Length == 0)
                 throw new NNXException("Array cannot be empty.");
@@ -106,7 +108,9 @@ namespace NNX.AddIn
         }
 
         [ExcelFunction(Name = "nnMakeWeights")]
-        public static string MakeWeights(string name, object[] weightArrays)
+        public static string MakeWeights(
+            [ExcelArgument(Description = "Name of the weights object to create.")] string name,
+            [ExcelArgument(Description = "Array of array objects created using =nnMakeArray().")] object[] weightArrays)
         {
             if (weightArrays == null || weightArrays.Length == 0)
                 throw new NNXException("Argument WeightArrays cannot be null or empty.");
@@ -304,8 +308,14 @@ namespace NNX.AddIn
         }
 
         [ExcelFunction(Name = "nnMakeSimpleGradientTrainer")]
-        public static string MakeSimpleGradientTrainer(string name, int numEpochs, double learningRate,
-            double momentum, double quadraticRegularization, int batchSize, int seed)
+        public static string MakeSimpleGradientTrainer(
+            [ExcelArgument(Description = "Name of trainer object to create.")] string name,
+            [ExcelArgument(Description = "Number of backpropagation steps to run. Each step may be on-line or a batch step.")] int numEpochs,
+            [ExcelArgument(Description = "Impact of each backpropagation step on weight adjustment.")] double learningRate,
+            [ExcelArgument(Description = "Impact of previous backpropagation stepts each step's adjustment.")] double momentum,
+            [ExcelArgument(Description = "Higher numbers help with keeping weights from becoming too large.")] double quadraticRegularization,
+            [ExcelArgument(Description = "Number of training samples to evaluate for each backpropagation step.")] int batchSize,
+            [ExcelArgument(Description = "Seed for random number generation.")] int seed)
         {
             var config = new SimpleGradientTrainer
             {
@@ -324,10 +334,22 @@ namespace NNX.AddIn
         }
 
         [ExcelFunction(Name = "nnMakeUntilDoneGradientTrainer")]
-        public static string MakeUntilDoneGradientTrainer(string name, int numEpochs, double learningRate,
-            double momentum, double quadraticRegularization, int batchSize, double maxRelativeNoise,
-            double validationSetFraction, int maxEpochsWithoutImprovement,
-            int epochsBetweenValidations, int seed)
+        public static string MakeUntilDoneGradientTrainer(
+            [ExcelArgument(Description = "Name of trainer object to create.")] string name,
+            [ExcelArgument(Description = "Maximum number of backpropagation steps to run. " +
+                                         "Each step may be on-line or a batch step.")] int numEpochs,
+            [ExcelArgument(Description = "Impact of each backpropagation step on weight adjustment.")] double learningRate,
+            [ExcelArgument(Description = "Impact of previous backpropagation stepts each step's adjustment.")] double momentum,
+            [ExcelArgument(Description = "Higher numbers help with keeping weights from becoming too large.")] double quadraticRegularization,
+            [ExcelArgument(Description = "Number of training samples to evaluate for each backpropagation step.")] int batchSize,
+            [ExcelArgument(Description = "Portion of the training set to use as validation set to check whether " +
+                                         "training has improved performance of the neural network. " +
+                                         "Must be between 0 and 1.")] double validationSetFraction,
+            [ExcelArgument(Description = "Training will abort after there is no error improvement on validation set after" +
+                                         "this number of backpropagation steps.")] int maxEpochsWithoutImprovement,
+            [ExcelArgument(Description = "Number of backpropagation steps before checking for error improvement on" +
+                                         "validation set.")] int epochsBetweenValidations,
+            [ExcelArgument(Description = "Seed for random number generation.")] int seed)
         {
             var config = new UntilDoneGradientTrainer
             {
@@ -336,7 +358,6 @@ namespace NNX.AddIn
                 Momentum = momentum,
                 QuadraticRegularization = quadraticRegularization,
                 BatchSize = batchSize,
-                MaxRelativeNoise = maxRelativeNoise,
                 ValidationSetFraction = validationSetFraction,
                 MaxEpochsWithoutImprovement = maxEpochsWithoutImprovement,
                 EpochsBetweenValidations = epochsBetweenValidations,
@@ -350,8 +371,13 @@ namespace NNX.AddIn
         }
 
         [ExcelFunction(Name = "nnMakeMultilayerPerceptron")]
-        public static string MakeMultilayerPerceptron(string name, int numInputs, int numOutputs,
-            double[] hiddenLayerSizes, string weights)
+        public static string MakeMultilayerPerceptron(
+            [ExcelArgument(Description = "Name of perceptron object to create.")] string name,
+            [ExcelArgument(Description = "Number of input nodes, not including input bias.")] int numInputs,
+            [ExcelArgument(Description = "Number of output nodes.")] int numOutputs,
+            [ExcelArgument(Description = "Number of nodes in each hidden layer, not including biases. " +
+                                         "Must be an array of integers.")] double[] hiddenLayerSizes,
+            [ExcelArgument(Description = "Weights object created using =nnMakeWeights().")] string weights)
         {
             var nn = new MultilayerPerceptron(numInputs, numOutputs, hiddenLayerSizes.ToIntArray());
 
@@ -378,14 +404,19 @@ namespace NNX.AddIn
         }
 
         [ExcelFunction(Name = "nnTrainMultilayerPerceptron")]
-        public static string TrainMultilayerPerceptron(string neuralNetworkName, string trainerConfigName,
-            object[,] inputs, object[,] targets, double[] hiddenLayerSizes)
+        public static string TrainMultilayerPerceptron(
+            [ExcelArgument(Description = "Name of perceptron object to create.")] string neuralNetworkName,
+            [ExcelArgument(Description = "Name of the trainer that will train this neural network.")] string trainerName,
+            [ExcelArgument(Description = "Matrix of training inputs.")] object[,] inputs,
+            [ExcelArgument(Description = "Matrix of training targets.")] object[,] targets,
+            [ExcelArgument(Description = "Number of nodes in each hidden layer, not including biases. " +
+                                         "Must be an array of integers.")] double[] hiddenLayerSizes)
         {
             var inputTargets = PrepareInputTargetSet(inputs, targets);
 
             var inputWidth = inputs.GetLength(1);
             var targedWidth = targets.GetLength(1);
-            var trainer = ObjectStore.Get<ITrainer>(trainerConfigName);
+            var trainer = ObjectStore.Get<ITrainer>(trainerName);
 
             var intHiddenLayerSizes = hiddenLayerSizes.Select(h => (int) h).ToArray();
             var nn = new MultilayerPerceptron(inputWidth, targedWidth, intHiddenLayerSizes);
@@ -396,14 +427,16 @@ namespace NNX.AddIn
             return neuralNetworkName;
         }
 
-        [ExcelFunction(Name = "nnGetTrainingStats")]
+        //[ExcelFunction(Name = "nnGetTrainingStats")]
         public static object[,] GetTrainingStats(string name)
         {
             throw new NotImplementedException();
         }
 
         [ExcelFunction(Name = "nnGetWeights")]
-        public static double[,] GetWeights(string neuralNetworkName, int layer)
+        public static double[,] GetWeights(
+            [ExcelArgument(Description = "Name of neural network for which to get weights.")] string neuralNetworkName,
+            [ExcelArgument(Description = "Neural network layer number, starting with 1.")] int layer)
         {
             var perceptron = ObjectStore.Get<INeuralNetwork>(neuralNetworkName);
 
@@ -417,7 +450,7 @@ namespace NNX.AddIn
             return result;
         }
 
-        [ExcelFunction(Name = "nnClearAllObjects")]
+        [ExcelFunction(Name = "nnClearAllObjects", Description = "Clear all objects from NNX object store.")]
         public static string ClearAllObjects()
         {
             ObjectStore.Clear();
@@ -425,7 +458,9 @@ namespace NNX.AddIn
         }
 
         [ExcelFunction(Name = "nnFeedForward")]
-        public static double[,] FeedForward(string neuralNetworkName, double[] inputs)
+        public static double[,] FeedForward(
+            [ExcelArgument(Description = "Name of neural network.")] string neuralNetworkName,
+            [ExcelArgument(Description = "Array of inputs.")] double[] inputs)
         {
             var nn = ObjectStore.Get<INeuralNetwork>(neuralNetworkName);
             var outputs = nn.FeedForward(inputs);
