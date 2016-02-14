@@ -62,6 +62,7 @@ namespace NNX.AddIn.Tests.ExcelFuncionsTests
                 new object[] {new object[0]},
                 new object[] {new object[] {null, null}},
                 new object[] {new object[] {ExcelEmpty.Value, null}},
+                new object[] {new object[] {null, ""}},
             };
         }
 
@@ -130,6 +131,7 @@ namespace NNX.AddIn.Tests.ExcelFuncionsTests
             {
                 new object[] {null},
                 new object[] {ExcelEmpty.Value},
+                new object[] {""},
             };
         }
 

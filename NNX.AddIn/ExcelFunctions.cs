@@ -38,9 +38,7 @@ namespace NNX.AddIn
             // find the first element that is neither null nor empty.
             var firstNonEmptyIndex = 0;
 
-            while (firstNonEmptyIndex < values.Length
-                   && (values[firstNonEmptyIndex] == null
-                       || values[firstNonEmptyIndex] == ExcelEmpty.Value))
+            while (firstNonEmptyIndex < values.Length && IsEmpty(values[firstNonEmptyIndex]))
                 firstNonEmptyIndex++;
 
             if (firstNonEmptyIndex >= values.Length)
@@ -56,7 +54,7 @@ namespace NNX.AddIn
                 {
                     var value = values[i];
 
-                    if (value == null || value == ExcelEmpty.Value)
+                    if (IsEmpty(value))
                         continue;
 
                     if (value is double)
@@ -81,7 +79,7 @@ namespace NNX.AddIn
                 {
                     var value = values[i];
 
-                    if (value == null || value == ExcelEmpty.Value)
+                    if (IsEmpty(value))
                         continue;
 
                     if (value is string)
@@ -405,7 +403,7 @@ namespace NNX.AddIn
 
         [ExcelFunction(Name = "nnTrainMultilayerPerceptron")]
         public static string TrainMultilayerPerceptron(
-            [ExcelArgument(Description = "Name of perceptron object to create.")] string neuralNetworkName,
+            [ExcelArgument(Description = "Name of perceptron object to create.")] string name,
             [ExcelArgument(Description = "Name of the trainer that will train this neural network.")] string trainerName,
             [ExcelArgument(Description = "Matrix of training inputs.")] object[,] inputs,
             [ExcelArgument(Description = "Matrix of training targets.")] object[,] targets,
@@ -423,8 +421,8 @@ namespace NNX.AddIn
 
             trainer.Train(inputTargets, nn);
 
-            ObjectStore.Add(neuralNetworkName, nn);
-            return neuralNetworkName;
+            ObjectStore.Add(name, nn);
+            return name;
         }
 
         //[ExcelFunction(Name = "nnGetTrainingStats")]
@@ -435,13 +433,13 @@ namespace NNX.AddIn
 
         [ExcelFunction(Name = "nnGetWeights")]
         public static double[,] GetWeights(
-            [ExcelArgument(Description = "Name of neural network for which to get weights.")] string neuralNetworkName,
+            [ExcelArgument(Description = "Name of neural network for which to get weights.")] string name,
             [ExcelArgument(Description = "Neural network layer number, starting with 1.")] int layer)
         {
-            var perceptron = ObjectStore.Get<INeuralNetwork>(neuralNetworkName);
+            var perceptron = ObjectStore.Get<INeuralNetwork>(name);
 
             if (layer > perceptron.Weights.Length || layer <= 0)
-                throw new NNXException($"Layer for neural network {neuralNetworkName} must be between " +
+                throw new NNXException($"Layer for neural network {name} must be between " +
                                        $"1 and {perceptron.Weights.Length}; was {layer}.");
 
             var result = perceptron.Weights[layer - 1].ToVertical2DArray();
@@ -577,6 +575,13 @@ namespace NNX.AddIn
                 return "an";
 
             return "a";
+        }
+
+        private static bool IsEmpty(object cellValue)
+        {
+            return cellValue == null
+                   || (cellValue is string && ((string) cellValue) == "")
+                   || cellValue == ExcelEmpty.Value;
         }
     }
 }
