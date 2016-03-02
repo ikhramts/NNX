@@ -343,9 +343,9 @@ namespace NNX.AddIn
             [ExcelArgument(Description = "Portion of the training set to use as validation set to check whether " +
                                          "training has improved performance of the neural network. " +
                                          "Must be between 0 and 1.")] double validationSetFraction,
-            [ExcelArgument(Description = "Training will abort after there is no error improvement on validation set after" +
+            [ExcelArgument(Description = "Training will abort after there is no error improvement on validation set after " +
                                          "this number of backpropagation steps.")] int maxEpochsWithoutImprovement,
-            [ExcelArgument(Description = "Number of backpropagation steps before checking for error improvement on" +
+            [ExcelArgument(Description = "Number of backpropagation steps before checking for error improvement on " +
                                          "validation set.")] int epochsBetweenValidations,
             [ExcelArgument(Description = "Seed for random number generation.")] int seed)
         {
