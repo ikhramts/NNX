@@ -1,3 +1,8 @@
+**This project is dead**. 
+
+The links below will probably not work.
+
+===============================================
 # NNX
 Main website: [nnx-addin.org](https://nnx-addin.org).
 
